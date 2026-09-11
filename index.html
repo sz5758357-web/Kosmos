@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="theme-color" content="#03040a">
+    <meta name="description" content="COSMOS — interaktywna podróż po kosmosie.">
+
+    <title>COSMOS — Explore the Universe</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="stars"></div>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="logo">
+            <span class="logo-dot"></span>
+            COSMOS
+        </div>
+
+        <nav id="navMenu">
+            <a href="#home">Start</a>
+            <a href="#planets">Planety</a>
+            <a href="#blackhole">Czarna dziura</a>
+            <a href="#mission">Misja</a>
+        </nav>
+
+        <button class="menu-btn" id="menuBtn">
+            ☰
+        </button>
+    </header>
+
+
+    <!-- HERO -->
+    <main>
+
+        <section class="hero" id="home">
+
+            <div class="hero-content">
+
+                <div class="small-label">
+                    ● SYSTEM ONLINE
+                </div>
+
+                <h1>
+                    ODKRYJ
+                    <span>WSZECHŚWIAT</span>
+                </h1>
+
+                <p>
+                    Poznaj planety, gwiazdy, czarne dziury
+                    i najbardziej niezwykłe miejsca w kosmosie.
+                </p>
+
+                <div class="hero-buttons">
+                    <a href="#planets" class="primary-btn">
+                        ROZPOCZNIJ PODRÓŻ
+                    </a>
+
+                    <a href="#blackhole" class="secondary-btn">
+                        ODKRYJ CZARNĄ DZIURĘ
+                    </a>
+                </div>
+
+            </div>
+
+            <div class="earth-area">
+
+                <div class="earth-glow"></div>
+
+                <div class="earth">
+                    <div class="earth-clouds"></div>
+                </div>
+
+                <div class="orbit orbit-1"></div>
+                <div class="orbit orbit-2"></div>
+
+            </div>
+
+            <div class="scroll">
+                SCROLL ↓
+            </div>
+
+        </section>
+
+
+        <!-- STATS -->
+        <section class="stats">
+
+            <div class="stat">
+                <strong>8</strong>
+                <span>PLANET</span>
+            </div>
+
+            <div class="stat">
+                <strong>1</strong>
+                <span>GWIAZDA</span>
+            </div>
+
+            <div class="stat">
+                <strong>∞</strong>
+                <span>GALAKTYK</span>
+            </div>
+
+            <div class="stat">
+                <strong>13.8B</strong>
+                <span>LAT</span>
+            </div>
+
+        </section>
+
+
+        <!-- PLANETS -->
+        <section class="section" id="planets">
+
+            <div class="section-heading">
+                <span>01 / UKŁAD SŁONECZNY</span>
+
+                <h2>
+                    NASZE
+                    <b>PLANETY</b>
+                </h2>
+
+                <p>
+                    Kliknij planetę, aby dowiedzieć się o niej więcej.
+                </p>
+            </div>
+
+
+            <div class="planet-system">
+
+                <div class="sun"></div>
+
+                <button class="planet mercury"
+                    data-name="Merkury"
+                    data-info="Najmniejsza planeta Układu Słonecznego i najbliższa Słońcu.">
+                    <span></span>
+                    <small>MERKURY</small>
+                </button>
+
+                <button class="planet venus"
+                    data-name="Wenus"
+                    data-info="Druga planeta od Słońca. Ma bardzo gęstą atmosferę i ekstremalnie wysoką temperaturę.">
+                    <span></span>
+                    <small>WENUS</small>
+                </button>
+
+                <button class="planet earth-small"
+                    data-name="Ziemia"
+                    data-info="Nasza planeta i jedyne znane miejsce we Wszechświecie, na którym istnieje życie.">
+                    <span></span>
+                    <small>ZIEMIA</small>
+                </button>
+
+                <button class="planet mars"
+                    data-name="Mars"
+                    data-info="Czerwona planeta. Znajdują się na niej ogromne wulkany i kaniony.">
+                    <span></span>
+                    <small>MARS</small>
+                </button>
+
+                <button class="planet jupiter"
+                    data-name="Jowisz"
+                    data-info="Największa planeta Układu Słonecznego. Jest gazowym olbrzymem.">
+                    <span></span>
+                    <small>JOWISZ</small>
+                </button>
+
+                <button class="planet saturn"
+                    data-name="Saturn"
+                    data-info="Gazowy olbrzym słynący z ogromnego systemu pierścieni.">
+                    <span></span>
+                    <small>SATURN</small>
+                </button>
+
+                <button class="planet uranus"
+                    data-name="Uran"
+                    data-info="Lodowy olbrzym obracający się niemal na boku.">
+                    <span></span>
+                    <small>URAN</small>
+                </button>
+
+                <button class="planet neptune"
+                    data-name="Neptun"
+                    data-info="Najdalsza planeta Układu Słonecznego. Ma intensywnie niebieski kolor.">
+                    <span></span>
+                    <small>NEPTUN</small>
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- PLANET POPUP -->
+        <div class="planet-modal" id="planetModal">
+
+            <div class="modal-box">
+
+                <button id="closeModal">×</button>
+
+                <span>PLANET DISCOVERED</span>
+
+                <h3 id="modalName">
+                    ZIEMIA
+                </h3>
+
+                <p id="modalInfo">
+                    Informacje o planecie.
+                </p>
+
+                <div class="modal-line"></div>
+
+                <button class="modal-btn" id="modalCloseBtn">
+                    WRÓĆ DO MAPY
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- BLACK HOLE -->
+        <section class="blackhole-section" id="blackhole">
+
+            <div class="blackhole-content">
+
+                <span>02 / EXTREME SPACE</span>
+
+                <h2>
+                    CZARNA
+                    <b>DZIURA</b>
+                </h2>
+
+                <p>
+                    Obszar czasoprzestrzeni, którego grawitacja jest tak
+                    silna, że nic — nawet światło — nie może się z niego wydostać.
+                </p>
+
+                <div class="blackhole-facts">
+
+                    <div>
+                        <strong>01</strong>
+                        <span>HORYZONT ZDARZEŃ</span>
+                    </div>
+
+                    <div>
+                        <strong>02</strong>
+                        <span>DYSK AKRECYJNY</span>
+                    </div>
+
+                    <div>
+                        <strong>03</strong>
+                        <span>OGROMNA GRAWITACJA</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="blackhole">
+
+                <div class="accretion"></div>
+
+                <div class="black-core"></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- JOURNEY -->
+        <section class="section journey">
+
+            <div class="section-heading">
+
+                <span>03 / SPACE JOURNEY</span>
+
+                <h2>
+                    PODRÓŻ
+                    <b>PO KOSMOSIE</b>
+                </h2>
+
+            </div>
+
+            <div class="journey-grid">
+
+                <article>
+                    <div class="number">01</div>
+                    <h3>Ziemia</h3>
+                    <p>
+                        Nasz dom w ogromnej przestrzeni kosmicznej.
+                    </p>
+                </article>
+
+                <article>
+                    <div class="number">02</div>
+                    <h3>Mars</h3>
+                    <p>
+                        Czerwony świat oddalony od nas o dziesiątki milionów kilometrów.
+                    </p>
+                </article>
+
+                <article>
+                    <div class="number">03</div>
+                    <h3>Jowisz</h3>
+                    <p>
+                        Gigantyczna planeta posiadająca potężne burze.
+                    </p>
+                </article>
+
+                <article>
+                    <div class="number">04</div>
+                    <h3>Droga Mleczna</h3>
+                    <p>
+                        Nasza galaktyka zawierająca setki miliardów gwiazd.
+                    </p>
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- MISSION -->
+        <section class="mission" id="mission">
+
+            <div>
+
+                <span>04 / NEXT MISSION</span>
+
+                <h2>
+                    GOTOWY NA
+                    <b>START?</b>
+                </h2>
+
+                <p>
+                    Odliczanie do rozpoczęcia Twojej kosmicznej podróży.
+                </p>
+
+                <div class="countdown">
+
+                    <div>
+                        <strong id="days">00</strong>
+                        <span>DNI</span>
+                    </div>
+
+                    <div>
+                        <strong id="hours">00</strong>
+                        <span>GODZ.</span>
+                    </div>
+
+                    <div>
+                        <strong id="minutes">00</strong>
+                        <span>MIN.</span>
+                    </div>
+
+                    <div>
+                        <strong id="seconds">00</strong>
+                        <span>SEK.</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer>
+
+        <div class="footer-logo">
+            COSMOS
+        </div>
+
+        <p>
+            EXPLORE THE UNKNOWN
+        </p>
+
+        <span>
+            COSMOS 1.0 © 2026
+        </span>
+
+    </footer>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>
