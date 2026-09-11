@@ -1,54 +1,82 @@
 /* =====================================================
-   COSMOS 1.0
-   SPACE OPERATIONS CENTER
+   COSMOS 2.0
+   MISSION CONTROL
 ===================================================== */
 
 
-/* =========================
-   BASIC SETUP
-========================= */
+/* =====================================================
+   DOM
+===================================================== */
 
 const canvas =
     document.getElementById("space");
+
+const app =
+    document.getElementById("app");
+
+const loading =
+    document.getElementById("loading");
+
+const loaderBar =
+    document.getElementById("loaderBar");
+
+const loaderText =
+    document.getElementById("loaderText");
+
+
+/* =====================================================
+   LOADING
+===================================================== */
+
+function loadStep(text, percent) {
+
+    loaderText.textContent = text;
+    loaderBar.style.width = percent + "%";
+}
+
+
+loadStep(
+    "INITIALIZING MISSION CONTROL",
+    10
+);
+
+
+/* =====================================================
+   THREE.JS
+===================================================== */
 
 const scene =
     new THREE.Scene();
 
 scene.background =
-    new THREE.Color(0x010208);
+    new THREE.Color(0x010207);
 
-
-/* =========================
-   CAMERA
-========================= */
 
 const camera =
     new THREE.PerspectiveCamera(
-        50,
+        48,
         window.innerWidth /
         window.innerHeight,
-        0.1,
+        .1,
         3000
     );
+
 
 camera.position.set(
     0,
     35,
-    110
+    115
 );
 
 
-/* =========================
-   RENDERER
-========================= */
-
 const renderer =
     new THREE.WebGLRenderer({
-        canvas: canvas,
+        canvas,
         antialias: false,
         powerPreference:
             "high-performance"
     });
+
 
 renderer.setPixelRatio(
     Math.min(
@@ -57,22 +85,24 @@ renderer.setPixelRatio(
     )
 );
 
+
 renderer.setSize(
     window.innerWidth,
     window.innerHeight
 );
 
 
-/* =========================
-   LIGHT
-========================= */
+/* =====================================================
+   LIGHTING
+===================================================== */
 
 scene.add(
     new THREE.AmbientLight(
         0xffffff,
-        0.08
+        .08
     )
 );
+
 
 const sunLight =
     new THREE.PointLight(
@@ -81,77 +111,40 @@ const sunLight =
         1000
     );
 
+
 scene.add(
     sunLight
 );
 
 
-/* =========================
-   LOADING
-========================= */
+/* =====================================================
+   STAR FIELD
+===================================================== */
 
-const loading =
-    document.getElementById(
-        "loading"
-    );
-
-const loadingProgress =
-    document.getElementById(
-        "loadingProgress"
-    );
-
-const loadingText =
-    document.getElementById(
-        "loadingText"
-    );
-
-const app =
-    document.getElementById(
-        "app"
-    );
-
-
-let loadPercent = 0;
-
-
-function loadingStep(
-    text,
-    percent
-) {
-
-    loadingText.textContent =
-        text;
-
-    loadingProgress.style.width =
-        percent + "%";
-}
-
-
-/* =========================
-   STARS
-========================= */
-
-loadingStep(
-    "BUILDING STAR FIELD...",
-    15
+loadStep(
+    "GENERATING DEEP SPACE",
+    20
 );
+
 
 const starGeometry =
     new THREE.BufferGeometry();
 
 const starPositions = [];
 
-const STAR_COUNT = 5000;
+const starCount = 7000;
+
 
 for (
     let i = 0;
-    i < STAR_COUNT;
+    i < starCount;
     i++
 ) {
 
     const radius =
-        500 +
-        Math.random() * 1000;
+        400 +
+        Math.random() *
+        1000;
 
     const theta =
         Math.random() *
@@ -164,6 +157,7 @@ for (
             Math.random() -
             1
         );
+
 
     starPositions.push(
         radius *
@@ -179,6 +173,7 @@ for (
     );
 }
 
+
 starGeometry.setAttribute(
     "position",
 
@@ -188,13 +183,23 @@ starGeometry.setAttribute(
     )
 );
 
+
 const starMaterial =
     new THREE.PointsMaterial({
-        color: 0xffffff,
-        size: 1.1,
-        transparent: true,
-        opacity: .85
+
+        color:
+            0xffffff,
+
+        size:
+            1.05,
+
+        transparent:
+            true,
+
+        opacity:
+            .9
     });
+
 
 const stars =
     new THREE.Points(
@@ -202,122 +207,171 @@ const stars =
         starMaterial
     );
 
-scene.add(stars);
+
+scene.add(
+    stars
+);
 
 
-/* =========================
-   TEXTURE LOADER
-========================= */
+/* =====================================================
+   TEXTURES
+===================================================== */
 
 const textureLoader =
     new THREE.TextureLoader();
 
 
-const TEXTURES =
+const TEXTURE_URL =
     "https://threejs.org/examples/textures/planets/";
 
 
-function texture(
-    filename
-) {
+function getTexture(name) {
 
     return textureLoader.load(
-        TEXTURES + filename
+        TEXTURE_URL + name
     );
 }
 
 
-/* =========================
+/* =====================================================
    SUN
-========================= */
+===================================================== */
 
-loadingStep(
-    "INITIALIZING STAR...",
-    25
+loadStep(
+    "INITIALIZING SOLAR CORE",
+    30
 );
+
 
 const sun =
     new THREE.Mesh(
+
         new THREE.SphereGeometry(
             9,
             32,
             32
         ),
+
         new THREE.MeshBasicMaterial({
-            map: texture(
-                "sun.jpg"
-            )
+            map:
+                getTexture(
+                    "sun.jpg"
+                )
         })
     );
 
-scene.add(sun);
+
+sun.userData = {
+
+    name:
+        "Sun",
+
+    type:
+        "STAR",
+
+    velocity:
+        "220 km/s",
+
+    distance:
+        "0 AU",
+
+    description:
+        "Gwiazda centralna Układu Słonecznego."
+};
+
+
+scene.add(
+    sun
+);
 
 
 /* SUN GLOW */
 
 const sunGlow =
     new THREE.Mesh(
+
         new THREE.SphereGeometry(
             11,
             24,
             24
         ),
+
         new THREE.MeshBasicMaterial({
-            color: 0xff9b22,
-            transparent: true,
-            opacity: .12,
+
+            color:
+                0xff9b32,
+
+            transparent:
+                true,
+
+            opacity:
+                .13,
+
             side:
                 THREE.BackSide
         })
     );
 
-scene.add(sunGlow);
+
+scene.add(
+    sunGlow
+);
 
 
-/* =========================
-   PLANET CONFIG
-========================= */
+/* =====================================================
+   PLANETS
+===================================================== */
 
-const planetsData = [
+loadStep(
+    "LOADING PLANETARY TELEMETRY",
+    42
+);
+
+
+const planetData = [
 
     {
         name: "Mercury",
-        radius: 1.4,
+        radius: 1.35,
         distance: 18,
         speed: .018,
         texture: "mercury_1k.jpg",
-        type: "TERRESTRIAL",
-        velocity: "47.4 km/s"
+        type: "TERRESTRIAL PLANET",
+        velocity: "47.4 km/s",
+        distanceText: "0.39 AU"
     },
 
     {
         name: "Venus",
-        radius: 2.2,
+        radius: 2.1,
         distance: 28,
         speed: .014,
         texture: "venus_surface_1k.jpg",
-        type: "TERRESTRIAL",
-        velocity: "35.0 km/s"
+        type: "TERRESTRIAL PLANET",
+        velocity: "35.0 km/s",
+        distanceText: "0.72 AU"
     },
 
     {
         name: "Earth",
-        radius: 2.7,
+        radius: 2.65,
         distance: 40,
         speed: .010,
         texture: "earth_atmos_2048.jpg",
-        type: "TERRESTRIAL",
-        velocity: "29.8 km/s"
+        type: "TERRESTRIAL PLANET",
+        velocity: "29.8 km/s",
+        distanceText: "1.00 AU"
     },
 
     {
         name: "Mars",
-        radius: 2,
+        radius: 2.0,
         distance: 53,
         speed: .008,
         texture: "mars_1k_color.jpg",
-        type: "TERRESTRIAL",
-        velocity: "24.1 km/s"
+        type: "TERRESTRIAL PLANET",
+        velocity: "24.1 km/s",
+        distanceText: "1.52 AU"
     },
 
     {
@@ -327,7 +381,8 @@ const planetsData = [
         speed: .004,
         texture: "jupiter_1k.jpg",
         type: "GAS GIANT",
-        velocity: "13.1 km/s"
+        velocity: "13.1 km/s",
+        distanceText: "5.20 AU"
     },
 
     {
@@ -337,7 +392,8 @@ const planetsData = [
         speed: .003,
         texture: "saturn_1k.jpg",
         type: "GAS GIANT",
-        velocity: "9.7 km/s"
+        velocity: "9.7 km/s",
+        distanceText: "9.58 AU"
     },
 
     {
@@ -347,7 +403,8 @@ const planetsData = [
         speed: .002,
         texture: "uranus_1k.jpg",
         type: "ICE GIANT",
-        velocity: "6.8 km/s"
+        velocity: "6.8 km/s",
+        distanceText: "19.2 AU"
     },
 
     {
@@ -357,7 +414,8 @@ const planetsData = [
         speed: .0015,
         texture: "neptune_1k.jpg",
         type: "ICE GIANT",
-        velocity: "5.4 km/s"
+        velocity: "5.4 km/s",
+        distanceText: "30.1 AU"
     }
 
 ];
@@ -366,27 +424,27 @@ const planetsData = [
 const planets = [];
 
 
-/* =========================
-   ORBIT
-========================= */
+/* =====================================================
+   ORBITS
+===================================================== */
 
-function createOrbit(
-    radius
-) {
+function createOrbit(radius) {
 
     const points = [];
 
     for (
         let i = 0;
-        i <= 160;
+        i <= 180;
         i++
     ) {
 
         const angle =
-            i /
-            160 *
+            (
+                i / 180
+            ) *
             Math.PI *
             2;
+
 
         points.push(
             new THREE.Vector3(
@@ -401,18 +459,27 @@ function createOrbit(
         );
     }
 
+
     const geometry =
         new THREE.BufferGeometry()
             .setFromPoints(
                 points
             );
 
+
     const material =
         new THREE.LineBasicMaterial({
-            color: 0x34405a,
-            transparent: true,
-            opacity: .28
+
+            color:
+                0x34415d,
+
+            transparent:
+                true,
+
+            opacity:
+                .32
         });
+
 
     const orbit =
         new THREE.LineLoop(
@@ -420,21 +487,18 @@ function createOrbit(
             material
         );
 
-    scene.add(orbit);
+
+    scene.add(
+        orbit
+    );
 }
 
 
-/* =========================
-   PLANETS
-========================= */
+/* =====================================================
+   CREATE PLANETS
+===================================================== */
 
-loadingStep(
-    "LOADING PLANETARY SYSTEM...",
-    40
-);
-
-
-planetsData.forEach(
+planetData.forEach(
     data => {
 
         createOrbit(
@@ -442,36 +506,53 @@ planetsData.forEach(
         );
 
 
-        const material =
-            new THREE.MeshStandardMaterial({
-                map: texture(
-                    data.texture
-                ),
-
-                roughness: .9
-            });
-
-
         const planet =
             new THREE.Mesh(
+
                 new THREE.SphereGeometry(
                     data.radius,
                     32,
                     32
                 ),
 
-                material
+                new THREE.MeshStandardMaterial({
+
+                    map:
+                        getTexture(
+                            data.texture
+                        ),
+
+                    roughness:
+                        .9
+                })
             );
 
 
         planet.userData = {
+
             ...data,
-            objectType: "planet"
+
+            objectType:
+                "planet"
         };
 
 
-        planet.position.x =
-            data.distance;
+        const angle =
+            Math.random() *
+            Math.PI *
+            2;
+
+
+        planet.position.set(
+
+            Math.cos(angle) *
+            data.distance,
+
+            0,
+
+            Math.sin(angle) *
+            data.distance
+        );
 
 
         scene.add(
@@ -480,62 +561,73 @@ planetsData.forEach(
 
 
         planets.push({
-            mesh: planet,
+
+            mesh:
+                planet,
+
             angle:
-                Math.random() *
-                Math.PI *
-                2
+                angle
         });
 
 
-        /* SATURN */
+        /* SATURN RINGS */
 
         if (
             data.name ===
             "Saturn"
         ) {
 
-            const ring =
+            const rings =
                 new THREE.Mesh(
+
                     new THREE.RingGeometry(
                         data.radius *
                         1.35,
 
                         data.radius *
-                        2,
+                        2.05,
 
-                        64
+                        80
                     ),
 
                     new THREE.MeshBasicMaterial({
-                        color:
-                            0xb9a788,
 
-                        side:
-                            THREE.DoubleSide,
+                        color:
+                            0xc6b89d,
 
                         transparent:
                             true,
 
                         opacity:
-                            .65
+                            .65,
+
+                        side:
+                            THREE.DoubleSide
                     })
                 );
 
-            ring.rotation.x =
+
+            rings.rotation.x =
                 Math.PI / 2;
 
+
             planet.add(
-                ring
+                rings
             );
         }
     }
 );
 
 
-/* =========================
-   EARTH ATMOSPHERE
-========================= */
+/* =====================================================
+   MOON
+===================================================== */
+
+loadStep(
+    "CALIBRATING LUNAR SYSTEM",
+    55
+);
+
 
 const earth =
     planets.find(
@@ -545,61 +637,24 @@ const earth =
     );
 
 
-if (earth) {
-
-    const atmosphere =
-        new THREE.Mesh(
-            new THREE.SphereGeometry(
-                2.85,
-                32,
-                32
-            ),
-
-            new THREE.MeshBasicMaterial({
-                color:
-                    0x4fa8ff,
-
-                transparent:
-                    true,
-
-                opacity:
-                    .09,
-
-                side:
-                    THREE.BackSide
-            })
-        );
-
-    earth.mesh.add(
-        atmosphere
-    );
-}
-
-
-/* =========================
-   MOON
-========================= */
-
-loadingStep(
-    "CALCULATING LUNAR ORBIT...",
-    55
-);
-
-
+let moon;
 let moonOrbit;
+
 
 if (earth) {
 
     moonOrbit =
         new THREE.Object3D();
 
+
     scene.add(
         moonOrbit
     );
 
 
-    const moon =
+    moon =
         new THREE.Mesh(
+
             new THREE.SphereGeometry(
                 .75,
                 24,
@@ -607,8 +662,9 @@ if (earth) {
             ),
 
             new THREE.MeshStandardMaterial({
+
                 map:
-                    texture(
+                    getTexture(
                         "moon_1024.jpg"
                     ),
 
@@ -623,10 +679,21 @@ if (earth) {
 
 
     moon.userData = {
-        name: "Moon",
-        objectType: "moon",
-        type: "NATURAL SATELLITE",
-        velocity: "1.02 km/s"
+
+        name:
+            "Moon",
+
+        type:
+            "NATURAL SATELLITE",
+
+        velocity:
+            "1.02 km/s",
+
+        distance:
+            "384,400 km",
+
+        description:
+            "Naturalny satelita Ziemi."
     };
 
 
@@ -636,42 +703,46 @@ if (earth) {
 }
 
 
-/* =========================
+/* =====================================================
    STARLINK
-========================= */
+===================================================== */
 
-loadingStep(
-    "DEPLOYING SATELLITE NETWORK...",
+loadStep(
+    "INITIALIZING ORBITAL NETWORK",
     65
 );
 
 
-const starlinks = [];
-
 const starlinkGroup =
     new THREE.Group();
+
 
 scene.add(
     starlinkGroup
 );
 
 
-function createStarlink(
-    index
+const starlinks = [];
+
+
+for (
+    let i = 0;
+    i < 70;
+    i++
 ) {
 
     const satellite =
         new THREE.Mesh(
 
             new THREE.BoxGeometry(
-                .25,
-                .08,
-                .08
+                .22,
+                .07,
+                .07
             ),
 
             new THREE.MeshBasicMaterial({
                 color:
-                    0xdde8ff
+                    0xe9f1ff
             })
         );
 
@@ -681,14 +752,11 @@ function createStarlink(
         name:
             "STARLINK-" +
             String(
-                index + 1
+                i + 1
             ).padStart(
                 4,
                 "0"
             ),
-
-        objectType:
-            "starlink",
 
         type:
             "COMMUNICATION SATELLITE",
@@ -697,30 +765,37 @@ function createStarlink(
             "≈ 7.6 km/s",
 
         distance:
-            "≈ 550 km"
+            "≈ 550 km",
 
+        description:
+            "Symulowany satelita konstelacji Starlink."
     };
 
-
-    satellite.userData.orbit =
-        2.9 +
-        Math.random() *
-        .5;
 
     satellite.userData.angle =
         Math.random() *
         Math.PI *
         2;
 
+
+    satellite.userData.radius =
+        4.0 +
+        Math.random() *
+        .6;
+
+
     satellite.userData.inclination =
-        (Math.random() -
-        .5) *
-        .9;
+        (
+            Math.random() -
+            .5
+        ) *
+        1.2;
 
 
     starlinkGroup.add(
         satellite
     );
+
 
     starlinks.push(
         satellite
@@ -728,33 +803,52 @@ function createStarlink(
 }
 
 
-for (
-    let i = 0;
-    i < 70;
-    i++
-) {
+/* =====================================================
+   STATE
+===================================================== */
 
-    createStarlink(i);
-}
+let selectedObject =
+    earth ?
+    earth.mesh :
+    sun;
 
 
-/* =========================
-   POINTER
-========================= */
+let dragging =
+    false;
 
-const pointer =
-    new THREE.Vector2();
+let lastPointerX =
+    0;
+
+let lastPointerY =
+    0;
+
+let cameraAngle =
+    .3;
+
+let cameraHeight =
+    35;
+
+let cameraDistance =
+    115;
+
+
+/* =====================================================
+   RAYCASTER
+===================================================== */
 
 const raycaster =
     new THREE.Raycaster();
 
 
-function getPointer(
-    event
-) {
+const pointer =
+    new THREE.Vector2();
+
+
+function pointerPosition(event) {
 
     const rect =
         canvas.getBoundingClientRect();
+
 
     pointer.x =
         (
@@ -764,6 +858,7 @@ function getPointer(
         rect.width *
         2 -
         1;
+
 
     pointer.y =
         -(
@@ -778,19 +873,15 @@ function getPointer(
 }
 
 
-/* =========================
-   INFO
-========================= */
+/* =====================================================
+   OBJECT INFORMATION
+===================================================== */
 
-let selectedObject =
-    earth ?
-    earth.mesh :
-    null;
+function selectObject(object) {
 
+    if (!object)
+        return;
 
-function showObject(
-    object
-) {
 
     selectedObject =
         object;
@@ -801,138 +892,93 @@ function showObject(
 
 
     document.getElementById(
-        "infoName"
+        "heroTitle"
     ).textContent =
-        data.name
-            .toUpperCase();
+        (
+            data.name ||
+            "UNKNOWN"
+        ).toUpperCase();
 
 
     document.getElementById(
-        "objectTitle"
+        "heroDescription"
     ).textContent =
-        data.name
-            .toUpperCase();
+        data.description ||
+        (
+            data.name +
+            " — observation target."
+        );
 
 
     document.getElementById(
-        "infoType"
+        "objectName"
+    ).textContent =
+        (
+            data.name ||
+            "UNKNOWN"
+        ).toUpperCase();
+
+
+    document.getElementById(
+        "objectDescription"
+    ).textContent =
+        data.description ||
+        "Observation target.";
+
+
+    document.getElementById(
+        "objectType"
     ).textContent =
         data.type ||
         "OBJECT";
 
 
     document.getElementById(
-        "infoVelocity"
+        "objectVelocity"
     ).textContent =
         data.velocity ||
         "—";
 
 
     document.getElementById(
-        "infoDistance"
+        "objectDistance"
     ).textContent =
+        data.distanceText ||
         data.distance ||
         "—";
 
 
     document.getElementById(
-        "infoStatus"
-    ).textContent =
-        data.objectType ===
-        "starlink"
-            ? "ORBITING"
-            : "ACTIVE";
-
-
-    document.getElementById(
-        "infoDescription"
-    ).textContent =
-        getDescription(
-            data
-        );
-
-
-    document.getElementById(
-        "objectDescription"
-    ).textContent =
-        getDescription(
-            data
-        );
-
-
-    document.getElementById(
-        "infoCard"
+        "objectCard"
     ).classList.add(
-        "visible"
+        "show"
     );
+
+
+    focusObject();
 }
 
 
-function getDescription(
-    data
-) {
-
-    if (
-        data.objectType ===
-        "starlink"
-    ) {
-
-        return (
-            "Satelita komunikacyjny " +
-            "poruszający się po orbicie " +
-            "okołoziemskiej. Wersja " +
-            "COSMOS wykorzystuje tutaj " +
-            "symulowany ruch konstelacji."
-        );
-    }
-
-
-    if (
-        data.name ===
-        "Earth"
-    ) {
-
-        return (
-            "Ziemia — trzecia planeta " +
-            "od Słońca. Jedyny znany " +
-            "świat posiadający życie."
-        );
-    }
-
-
-    if (
-        data.name ===
-        "Moon"
-    ) {
-
-        return (
-            "Naturalny satelita Ziemi " +
-            "okrążający ją w czasie około " +
-            "27,3 dnia."
-        );
-    }
-
-
-    return (
-        data.name +
-        " — obiekt Układu " +
-        "Słonecznego obserwowany " +
-        "przez centrum COSMOS."
-    );
-}
-
-
-/* =========================
+/* =====================================================
    CLICK
-========================= */
+===================================================== */
 
 canvas.addEventListener(
-    "pointerdown",
+    "pointerup",
     event => {
 
-        getPointer(
+        if (
+            Math.abs(
+                event.clientX -
+                lastPointerX
+            ) > 8
+        ) return;
+
+
+        pointerPosition(
             event
         );
+
 
         raycaster.setFromCamera(
             pointer,
@@ -940,19 +986,25 @@ canvas.addEventListener(
         );
 
 
-        const objects = [
+        const targets = [
+
             ...planets.map(
                 p =>
                     p.mesh
             ),
 
+            moon,
+
+            sun,
+
             ...starlinks
-        ];
+
+        ].filter(Boolean);
 
 
         const hits =
             raycaster.intersectObjects(
-                objects
+                targets
             );
 
 
@@ -960,11 +1012,7 @@ canvas.addEventListener(
             hits.length
         ) {
 
-            showObject(
-                hits[0].object
-            );
-
-            focusTarget(
+            selectObject(
                 hits[0].object
             );
         }
@@ -972,28 +1020,9 @@ canvas.addEventListener(
 );
 
 
-/* =========================
-   CAMERA CONTROL
-========================= */
-
-let dragging =
-    false;
-
-let previousX =
-    0;
-
-let previousY =
-    0;
-
-let cameraAngle =
-    0;
-
-let cameraHeight =
-    35;
-
-let cameraDistance =
-    110;
-
+/* =====================================================
+   CAMERA DRAG
+===================================================== */
 
 canvas.addEventListener(
     "pointerdown",
@@ -1001,10 +1030,10 @@ canvas.addEventListener(
 
         dragging = true;
 
-        previousX =
+        lastPointerX =
             event.clientX;
 
-        previousY =
+        lastPointerY =
             event.clientY;
     }
 );
@@ -1029,11 +1058,12 @@ canvas.addEventListener(
 
         const dx =
             event.clientX -
-            previousX;
+            lastPointerX;
+
 
         const dy =
             event.clientY -
-            previousY;
+            lastPointerY;
 
 
         cameraAngle +=
@@ -1041,7 +1071,7 @@ canvas.addEventListener(
 
 
         cameraHeight -=
-            dy * .2;
+            dy * .18;
 
 
         cameraHeight =
@@ -1054,18 +1084,18 @@ canvas.addEventListener(
             );
 
 
-        previousX =
+        lastPointerX =
             event.clientX;
 
-        previousY =
+        lastPointerY =
             event.clientY;
     }
 );
 
 
-/* =========================
+/* =====================================================
    ZOOM
-========================= */
+===================================================== */
 
 canvas.addEventListener(
     "wheel",
@@ -1078,7 +1108,7 @@ canvas.addEventListener(
 
         cameraDistance =
             Math.max(
-                15,
+                12,
                 Math.min(
                     500,
                     cameraDistance
@@ -1091,466 +1121,150 @@ canvas.addEventListener(
 );
 
 
-/* =========================
+/* =====================================================
    FOCUS
-========================= */
+===================================================== */
 
-function focusTarget(
-    object
-) {
+function focusObject() {
 
-    if (!object)
-        return;
+    if (
+        !selectedObject
+    ) return;
 
 
-    const distance =
-        object.userData.objectType ===
+    const type =
+        selectedObject.userData
+            .objectType;
+
+
+    if (
+        type ===
         "planet"
-            ? object.userData.radius
-                ? object.userData.radius *
-                  7
-                : 15
+    ) {
 
-            : 15;
+        cameraDistance =
+            Math.max(
+                15,
+                selectedObject.userData.radius *
+                7
+            );
 
+    } else {
 
-    cameraDistance =
-        Math.max(
-            15,
-            distance
-        );
+        cameraDistance =
+            18;
+    }
 }
 
 
 document.getElementById(
-    "focusObject"
-).onclick = () => {
+    "focusBtn"
+).onclick =
+    focusObject;
+
+
+document.getElementById(
+    "objectTrack"
+).onclick =
+    focusObject;
+
+
+document.getElementById(
+    "resetBtn"
+).onclick =
+    () => {
+
+        selectedObject =
+            null;
+
+        cameraAngle =
+            .3;
+
+        cameraHeight =
+            35;
+
+        cameraDistance =
+            115;
+
+        document.getElementById(
+            "objectCard"
+        ).classList.remove(
+            "show"
+        );
+    };
+
+
+document.getElementById(
+    "closeObject"
+).onclick =
+    () => {
+
+        document.getElementById(
+            "objectCard"
+        ).classList.remove(
+            "show"
+        );
+    };
+
+
+/* =====================================================
+   CAMERA UPDATE
+===================================================== */
+
+function updateCamera() {
+
+    let target =
+        new THREE.Vector3(
+            0,
+            0,
+            0
+        );
+
 
     if (
         selectedObject
     ) {
 
-        focusTarget(
-            selectedObject
+        target =
+            selectedObject.position;
+    }
+
+
+    const desired =
+        new THREE.Vector3(
+
+            target.x +
+            Math.sin(
+                cameraAngle
+            ) *
+            cameraDistance,
+
+            target.y +
+            cameraHeight,
+
+            target.z +
+            Math.cos(
+                cameraAngle
+            ) *
+            cameraDistance
         );
-    }
-};
 
 
-document.getElementById(
-    "infoFocus"
-).onclick = () => {
-
-    if (
-        selectedObject
-    ) {
-
-        focusTarget(
-            selectedObject
-        );
-    }
-};
-
-
-document.getElementById(
-    "resetView"
-).onclick = () => {
-
-    cameraAngle = 0;
-
-    cameraHeight = 35;
-
-    cameraDistance = 110;
-
-    selectedObject = null;
-};
-
-
-/* =========================
-   INFO CLOSE
-========================= */
-
-document.getElementById(
-    "closeInfo"
-).onclick = () => {
-
-    document.getElementById(
-        "infoCard"
-    ).classList.remove(
-        "visible"
-    );
-};
-
-
-/* =========================
-   MENU
-========================= */
-
-const sidebar =
-    document.getElementById(
-        "sidebar"
+    camera.position.lerp(
+        desired,
+        .045
     );
 
 
-document.getElementById(
-    "menuButton"
-).onclick = () => {
-
-    sidebar.classList.toggle(
-        "open"
-    );
-};
-
-
-/* =========================
-   MODALS
-========================= */
-
-const modal =
-    document.getElementById(
-        "sectionModal"
-    );
-
-const modalContent =
-    document.getElementById(
-        "modalContent"
-    );
-
-
-document.getElementById(
-    "closeModal"
-).onclick = () => {
-
-    modal.classList.remove(
-        "active"
-    );
-};
-
-
-function openSection(
-    section
-) {
-
-    let html = "";
-
-
-    if (
-        section ===
-        "planets"
-    ) {
-
-        html = `
-            <h2>PLANETARY SYSTEM</h2>
-
-            <p>
-                Aktualnie obserwowane obiekty
-                Układu Słonecznego.
-            </p>
-
-            ${planetsData.map(
-                planet => `
-                    <div class="list-card">
-                        <strong>
-                            ${planet.name}
-                        </strong>
-
-                        <small>
-                            ${planet.type}
-                            ·
-                            ${planet.velocity}
-                        </small>
-                    </div>
-                `
-            ).join("")}
-        `;
-    }
-
-
-    if (
-        section ===
-        "missions"
-    ) {
-
-        html = `
-            <h2>SPACE MISSIONS</h2>
-
-            <div class="list-card">
-                <strong>ARTEMIS</strong>
-                <small>
-                    Program powrotu ludzi
-                    na Księżyc.
-                </small>
-            </div>
-
-            <div class="list-card">
-                <strong>JUNO</strong>
-                <small>
-                    Badanie Jowisza.
-                </small>
-            </div>
-
-            <div class="list-card">
-                <strong>JUICE</strong>
-                <small>
-                    Misja ESA badająca
-                    układ Jowisza.
-                </small>
-            </div>
-
-            <div class="list-card">
-                <strong>EUCLID</strong>
-                <small>
-                    Obserwacje struktury
-                    Wszechświata.
-                </small>
-            </div>
-        `;
-    }
-
-
-    if (
-        section ===
-        "starlink"
-    ) {
-
-        html = `
-            <h2>STARLINK</h2>
-
-            <p>
-                Konstelacja satelitów
-                została tutaj przedstawiona
-                jako symulacja orbitalna.
-            </p>
-
-            <div class="list-card">
-                <strong>
-                    ${starlinks.length}
-                    SATELLITES
-                </strong>
-
-                <small>
-                    SIMULATED ORBIT
-                </small>
-            </div>
-
-            <div class="list-card">
-                <strong>
-                    ORBIT ALTITUDE
-                </strong>
-
-                <small>
-                    ~550 km
-                </small>
-            </div>
-        `;
-    }
-
-
-    if (
-        section ===
-        "stars"
-    ) {
-
-        html = `
-            <h2>DEEP SPACE</h2>
-
-            <p>
-                Pole gwiazd COSMOS zawiera
-                tysiące proceduralnie rozmieszczonych
-                punktów świetlnych.
-            </p>
-
-            <div class="list-card">
-                <strong>
-                    MILKY WAY
-                </strong>
-
-                <small>
-                    GALAXY · ~100 000 LY
-                </small>
-            </div>
-
-            <div class="list-card">
-                <strong>
-                    SUN
-                </strong>
-
-                <small>
-                    G-TYPE MAIN-SEQUENCE STAR
-                </small>
-            </div>
-        `;
-    }
-
-
-    if (
-        section ===
-        "news"
-    ) {
-
-        html = `
-            <h2>SPACE NEWS</h2>
-
-            <div class="list-card">
-                <strong>
-                    DEEP SPACE OBSERVATION
-                </strong>
-
-                <small>
-                    COSMOS SIMULATION FEED
-                </small>
-            </div>
-
-            <div class="list-card">
-                <strong>
-                    ORBITAL NETWORK
-                </strong>
-
-                <small>
-                    SATELLITE TRACKING SYSTEM
-                </small>
-            </div>
-
-            <div class="list-card">
-                <strong>
-                    PLANETARY SCIENCE
-                </strong>
-
-                <small>
-                    SOLAR SYSTEM MONITORING
-                </small>
-            </div>
-        `;
-    }
-
-
-    if (
-        section ===
-        "home"
-    ) {
-
-        return;
-    }
-
-
-    modalContent.innerHTML =
-        html;
-
-
-    modal.classList.add(
-        "active"
-    );
-
-
-    sidebar.classList.remove(
-        "open"
+    camera.lookAt(
+        target
     );
 }
 
 
-/* NAVIGATION */
-
-document
-    .querySelectorAll(
-        ".nav-item"
-    )
-    .forEach(
-        button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    document
-                        .querySelectorAll(
-                            ".nav-item"
-                        )
-                        .forEach(
-                            item =>
-                                item.classList
-                                    .remove(
-                                        "active"
-                                    )
-                        );
-
-
-                    button.classList.add(
-                        "active"
-                    );
-
-
-                    openSection(
-                        button.dataset.section
-                    );
-                }
-            );
-        }
-    );
-
-
-/* =========================
-   STARLINK MOTION
-========================= */
-
-function updateStarlinks() {
-
-    if (!earth)
-        return;
-
-
-    starlinks.forEach(
-        satellite => {
-
-            satellite.userData.angle +=
-                .0025;
-
-
-            const angle =
-                satellite.userData.angle;
-
-            const radius =
-                satellite.userData.orbit;
-
-
-            satellite.position.set(
-
-                Math.cos(angle) *
-                radius,
-
-                Math.sin(
-                    angle *
-                    1.7
-                ) *
-                satellite.userData.inclination,
-
-                Math.sin(angle) *
-                radius
-
-            );
-
-
-            /*
-              Starlink jest
-              przedstawiony względem
-              Ziemi.
-            */
-
-            satellite.position
-                .add(
-                    earth.mesh.position
-                );
-
-
-            satellite.rotation.y +=
-                .01;
-        }
-    );
-}
-
-
-/* =========================
+/* =====================================================
    PLANET MOTION
-========================= */
+===================================================== */
 
 function updatePlanets() {
 
@@ -1580,96 +1294,165 @@ function updatePlanets() {
 
 
             planet.mesh.rotation.y +=
-                .0025;
+                .002;
         }
     );
 }
 
 
-/* =========================
-   CAMERA
-========================= */
+/* =====================================================
+   MOON MOTION
+===================================================== */
 
-function updateCamera() {
+function updateMoon() {
 
-    if (
-        selectedObject
-    ) {
-
-        const target =
-            selectedObject
-                .position;
+    if (!moonOrbit)
+        return;
 
 
-        const desired =
-            new THREE.Vector3(
-                target.x +
-                Math.sin(
-                    cameraAngle
-                ) *
-                cameraDistance,
-
-                target.y +
-                cameraHeight,
-
-                target.z +
-                Math.cos(
-                    cameraAngle
-                ) *
-                cameraDistance
-            );
-
-
-        camera.position.lerp(
-            desired,
-            .04
-        );
-
-
-        camera.lookAt(
-            target
-        );
-
-    } else {
-
-        const desired =
-            new THREE.Vector3(
-                Math.sin(
-                    cameraAngle
-                ) *
-                cameraDistance,
-
-                cameraHeight,
-
-                Math.cos(
-                    cameraAngle
-                ) *
-                cameraDistance
-            );
-
-
-        camera.position.lerp(
-            desired,
-            .04
-        );
-
-
-        camera.lookAt(
-            0,
-            0,
-            0
-        );
-    }
+    moonOrbit.rotation.y +=
+        .006;
 }
 
 
-/* =========================
+/* =====================================================
+   STARLINK MOTION
+===================================================== */
+
+function updateStarlink() {
+
+    if (!earth)
+        return;
+
+
+    starlinks.forEach(
+        satellite => {
+
+            satellite.userData.angle +=
+                .003;
+
+
+            const angle =
+                satellite.userData.angle;
+
+
+            const radius =
+                satellite.userData.radius;
+
+
+            satellite.position.set(
+
+                Math.cos(angle) *
+                radius,
+
+                Math.sin(
+                    angle *
+                    1.7
+                ) *
+                satellite.userData
+                    .inclination,
+
+                Math.sin(angle) *
+                radius
+
+            );
+
+
+            satellite.position.add(
+                earth.mesh.position
+            );
+
+
+            satellite.rotation.y +=
+                .01;
+        }
+    );
+}
+
+
+/* =====================================================
+   TIME
+===================================================== */
+
+function updateClock() {
+
+    const now =
+        new Date();
+
+
+    const h =
+        String(
+            now.getUTCHours()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const m =
+        String(
+            now.getUTCMinutes()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const s =
+        String(
+            now.getUTCSeconds()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    document.getElementById(
+        "utcClock"
+    ).textContent =
+        `${h}:${m}:${s}`;
+}
+
+
+/* =====================================================
+   TELEMETRY
+===================================================== */
+
+function updateTelemetry() {
+
+    document.getElementById(
+        "camX"
+    ).textContent =
+        Math.round(
+            camera.position.x
+        );
+
+
+    document.getElementById(
+        "camY"
+    ).textContent =
+        Math.round(
+            camera.position.y
+        );
+
+
+    document.getElementById(
+        "camZ"
+    ).textContent =
+        Math.round(
+            camera.position.z
+        );
+}
+
+
+/* =====================================================
    FPS
-========================= */
+===================================================== */
 
-let frames = 0;
+let frames =
+    0;
 
-let lastFPS =
+let fpsTime =
     performance.now();
 
 
@@ -1677,13 +1460,14 @@ function updateFPS() {
 
     frames++;
 
+
     const now =
         performance.now();
 
 
     if (
         now -
-        lastFPS >
+        fpsTime >
         1000
     ) {
 
@@ -1693,81 +1477,417 @@ function updateFPS() {
             frames;
 
 
-        frames = 0;
+        frames =
+            0;
 
-        lastFPS = now;
+        fpsTime =
+            now;
     }
 }
 
 
-/* =========================
-   CAMERA DATA
-========================= */
+/* =====================================================
+   NAVIGATION PANELS
+===================================================== */
 
-function updateHUD() {
+const overlay =
+    document.getElementById(
+        "panelOverlay"
+    );
+
+
+const panelContent =
+    document.getElementById(
+        "panelContent"
+    );
+
+
+function openPanel(page) {
+
+    let content = "";
+
+
+    if (
+        page ===
+        "planets"
+    ) {
+
+        content = `
+            <h2>PLANETS</h2>
+
+            <p>
+                Planetary tracking and orbital
+                observation system.
+            </p>
+
+            <div class="panel-list">
+
+                ${planetData.map(
+                    p => `
+
+                    <div class="panel-item">
+
+                        <strong>
+                            ${p.name.toUpperCase()}
+                        </strong>
+
+                        <span>
+                            ${p.type}<br>
+                            Velocity:
+                            ${p.velocity}<br>
+                            Distance:
+                            ${p.distanceText}
+                        </span>
+
+                    </div>
+
+                `
+                ).join("")}
+
+            </div>
+        `;
+    }
+
+
+    if (
+        page ===
+        "missions"
+    ) {
+
+        content = `
+            <h2>SPACE MISSIONS</h2>
+
+            <p>
+                Mission monitoring center.
+            </p>
+
+            <div class="panel-list">
+
+                <div class="panel-item">
+                    <strong>ARTEMIS</strong>
+                    <span>
+                        Lunar exploration program.
+                        Status: ACTIVE
+                    </span>
+                </div>
+
+                <div class="panel-item">
+                    <strong>JUICE</strong>
+                    <span>
+                        Jupiter Icy Moons Explorer.
+                        Status: EN ROUTE
+                    </span>
+                </div>
+
+                <div class="panel-item">
+                    <strong>JUNO</strong>
+                    <span>
+                        Jupiter observation mission.
+                        Status: ACTIVE
+                    </span>
+                </div>
+
+                <div class="panel-item">
+                    <strong>EUCLID</strong>
+                    <span>
+                        Deep-space cosmology mission.
+                        Status: ACTIVE
+                    </span>
+                </div>
+
+            </div>
+        `;
+    }
+
+
+    if (
+        page ===
+        "starlink"
+    ) {
+
+        content = `
+            <h2>STARLINK</h2>
+
+            <p>
+                Orbital visualization of a
+                simulated low-Earth-orbit
+                satellite constellation.
+            </p>
+
+            <div class="panel-list">
+
+                <div class="panel-item">
+                    <strong>
+                        ${starlinks.length}
+                    </strong>
+
+                    <span>
+                        SATELLITES IN SIMULATION
+                    </span>
+                </div>
+
+                <div class="panel-item">
+                    <strong>
+                        ~550 KM
+                    </strong>
+
+                    <span>
+                        SIMULATED ORBIT ALTITUDE
+                    </span>
+                </div>
+
+                <div class="panel-item">
+                    <strong>
+                        ~7.6 KM/S
+                    </strong>
+
+                    <span>
+                        APPROXIMATE ORBITAL VELOCITY
+                    </span>
+                </div>
+
+                <div class="panel-item">
+                    <strong>
+                        LEO
+                    </strong>
+
+                    <span>
+                        LOW EARTH ORBIT
+                    </span>
+                </div>
+
+            </div>
+        `;
+    }
+
+
+    if (
+        page ===
+        "stars"
+    ) {
+
+        content = `
+            <h2>DEEP SPACE</h2>
+
+            <p>
+                Explore the simulated stellar
+                background surrounding the
+                solar system.
+            </p>
+
+            <div class="panel-list">
+
+                <div class="panel-item">
+                    <strong>SUN</strong>
+                    <span>
+                        G-type main-sequence star
+                    </span>
+                </div>
+
+                <div class="panel-item">
+                    <strong>MILKY WAY</strong>
+                    <span>
+                        Our home galaxy.
+                    </span>
+                </div>
+
+                <div class="panel-item">
+                    <strong>STAR FIELD</strong>
+                    <span>
+                        7,000 procedural stars
+                        rendered in the scene.
+                    </span>
+                </div>
+
+                <div class="panel-item">
+                    <strong>DEEP SPACE</strong>
+                    <span>
+                        Long-range observation mode.
+                    </span>
+                </div>
+
+            </div>
+        `;
+    }
+
+
+    if (
+        page ===
+        "news"
+    ) {
+
+        content = `
+            <h2>SPACE NEWS</h2>
+
+            <p>
+                COSMOS information feed.
+            </p>
+
+            <div class="panel-list">
+
+                <div class="panel-item">
+                    <strong>
+                        ORBITAL MONITORING
+                    </strong>
+                    <span>
+                        Satellite tracking systems
+                        are online.
+                    </span>
+                </div>
+
+                <div class="panel-item">
+                    <strong>
+                        LUNAR EXPLORATION
+                    </strong>
+                    <span>
+                        Lunar mission monitoring
+                        available.
+                    </span>
+                </div>
+
+                <div class="panel-item">
+                    <strong>
+                        DEEP SPACE
+                    </strong>
+                    <span>
+                        Observatory systems active.
+                    </span>
+                </div>
+
+                <div class="panel-item">
+                    <strong>
+                        SOLAR SYSTEM
+                    </strong>
+                    <span>
+                        Planetary simulation running.
+                    </span>
+                </div>
+
+            </div>
+        `;
+    }
+
+
+    if (
+        page ===
+        "home"
+    ) {
+
+        return;
+    }
+
+
+    panelContent.innerHTML =
+        content;
+
+
+    overlay.classList.add(
+        "show"
+    );
+
 
     document.getElementById(
-        "cameraData"
-    ).textContent =
-        "X " +
-        Math.round(
-            camera.position.x
-        ) +
+        "sidebar"
+    ).classList.remove(
+        "open"
+    );
+}
 
-        "  Y " +
 
-        Math.round(
-            camera.position.y
-        ) +
+/* =====================================================
+   NAV BUTTONS
+===================================================== */
 
-        "  Z " +
+document
+    .querySelectorAll(".nav")
+    .forEach(
+        button => {
 
-        Math.round(
-            camera.position.z
+            button.addEventListener(
+                "click",
+                () => {
+
+                    document
+                        .querySelectorAll(
+                            ".nav"
+                        )
+                        .forEach(
+                            n =>
+                                n.classList
+                                    .remove(
+                                        "active"
+                                    )
+                        );
+
+
+                    button.classList.add(
+                        "active"
+                    );
+
+
+                    openPanel(
+                        button.dataset.page
+                    );
+                }
+            );
+        }
+    );
+
+
+/* =====================================================
+   CLOSE PANEL
+===================================================== */
+
+document.getElementById(
+    "closePanel"
+).onclick =
+    () => {
+
+        overlay.classList.remove(
+            "show"
         );
-}
+    };
 
 
-/* =========================
-   ANIMATION
-========================= */
+overlay.addEventListener(
+    "click",
+    event => {
 
-function animate() {
+        if (
+            event.target ===
+            overlay
+        ) {
 
-    requestAnimationFrame(
-        animate
-    );
-
-
-    updatePlanets();
-
-    updateStarlinks();
-
-    updateCamera();
-
-    updateHUD();
-
-    updateFPS();
+            overlay.classList.remove(
+                "show"
+            );
+        }
+    }
+);
 
 
-    sun.rotation.y +=
-        .001;
+/* =====================================================
+   MOBILE MENU
+===================================================== */
+
+document.getElementById(
+    "menuBtn"
+).onclick =
+    () => {
+
+        document
+            .getElementById(
+                "sidebar"
+            )
+            .classList.toggle(
+                "open"
+            );
+    };
 
 
-    stars.rotation.y +=
-        .00005;
-
-
-    renderer.render(
-        scene,
-        camera
-    );
-}
-
-
-/* =========================
+/* =====================================================
    RESIZE
-========================= */
+===================================================== */
 
 window.addEventListener(
     "resize",
@@ -1797,12 +1917,53 @@ window.addEventListener(
 );
 
 
-/* =========================
-   START
-========================= */
+/* =====================================================
+   ANIMATION
+===================================================== */
 
-loadingStep(
-    "SPACE OPERATIONS READY...",
+function animate() {
+
+    requestAnimationFrame(
+        animate
+    );
+
+
+    updatePlanets();
+
+    updateMoon();
+
+    updateStarlink();
+
+    updateCamera();
+
+    updateTelemetry();
+
+    updateClock();
+
+    updateFPS();
+
+
+    sun.rotation.y +=
+        .0015;
+
+
+    stars.rotation.y +=
+        .00003;
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+loadStep(
+    "MISSION CONTROL ONLINE",
     100
 );
 
@@ -1811,7 +1972,7 @@ setTimeout(
     () => {
 
         loading.classList.add(
-            "hidden"
+            "hide"
         );
 
         app.classList.add(
@@ -1819,7 +1980,7 @@ setTimeout(
         );
 
     },
-    500
+    700
 );
 
 
