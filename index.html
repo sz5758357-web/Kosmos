@@ -2,91 +2,326 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
 
-    <title>COSMOS 3D</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <title>COSMOS — Space Operations Center</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+<!-- LOADING -->
+
 <div id="loading">
-    <div class="loader-logo">COSMOS</div>
-    <div class="loader-bar">
-        <div></div>
+    <div class="loading-content">
+        <div class="loading-logo">
+            COSMOS
+        </div>
+
+        <div class="loading-sub">
+            SPACE OPERATIONS CENTER
+        </div>
+
+        <div class="loading-line">
+            <div id="loadingProgress"></div>
+        </div>
+
+        <div id="loadingText">
+            INITIALIZING SYSTEM...
+        </div>
     </div>
-    <p>Ładowanie kosmosu...</p>
 </div>
+
+
+<!-- APP -->
 
 <div id="app">
 
-    <header>
-        <div class="logo">
-            COSMOS<span>3D</span>
-        </div>
-
-        <div class="status">
-            ● SYSTEM ONLINE
-        </div>
-    </header>
-
-    <div class="info">
-        <div class="small">UKŁAD SŁONECZNY</div>
-        <h1 id="planetName">KOSMOS</h1>
-        <p id="planetInfo">
-            Przeciągnij ekran, aby obracać widok.
-            Przybliżaj dwoma palcami.
-        </p>
-    </div>
-
-    <div id="planetCard">
-
-        <button id="close">×</button>
-
-        <div class="card-label">
-            OBIEKT
-        </div>
-
-        <h2 id="cardName">
-            ZIEMIA
-        </h2>
-
-        <p id="cardDescription">
-            Nasza planeta.
-        </p>
-
-        <div class="stats">
-
-            <div>
-                <span>ŚREDNICA</span>
-                <b id="diameter">12 742 km</b>
-            </div>
-
-            <div>
-                <span>ROK</span>
-                <b id="year">365 dni</b>
-            </div>
-
-        </div>
-
-        <button id="focus">
-            OBEJRZYJ PLANETĘ
-        </button>
-
-    </div>
-
-    <div class="bottom">
-        <span>3D SPACE EXPLORER</span>
-        <span id="coordinates">X 000 Y 000 Z 000</span>
-    </div>
+    <!-- 3D -->
 
     <canvas id="space"></canvas>
 
+
+    <!-- TOP BAR -->
+
+    <header class="topbar">
+
+        <div class="brand">
+            <div class="brand-mark">
+                C
+            </div>
+
+            <div>
+                <strong>COSMOS</strong>
+                <span>SPACE OPERATIONS</span>
+            </div>
+        </div>
+
+
+        <div class="top-status">
+            <span class="live-dot"></span>
+            SYSTEM ONLINE
+        </div>
+
+
+        <button
+            id="menuButton"
+            class="menu-button"
+        >
+            ☰
+        </button>
+
+    </header>
+
+
+    <!-- SIDE MENU -->
+
+    <aside id="sidebar">
+
+        <div class="side-title">
+            MISSION CONTROL
+        </div>
+
+        <button
+            class="nav-item active"
+            data-section="home"
+        >
+            <span>⌂</span>
+            HOME
+        </button>
+
+        <button
+            class="nav-item"
+            data-section="planets"
+        >
+            <span>◉</span>
+            PLANETS
+        </button>
+
+        <button
+            class="nav-item"
+            data-section="missions"
+        >
+            <span>🚀</span>
+            MISSIONS
+        </button>
+
+        <button
+            class="nav-item"
+            data-section="starlink"
+        >
+            <span>🛰</span>
+            STARLINK
+        </button>
+
+        <button
+            class="nav-item"
+            data-section="stars"
+        >
+            <span>✦</span>
+            STARS
+        </button>
+
+        <button
+            class="nav-item"
+            data-section="news"
+        >
+            <span>▤</span>
+            NEWS
+        </button>
+
+
+        <div class="side-bottom">
+
+            <div class="system-row">
+                <span class="green"></span>
+                WEBGL ENGINE
+            </div>
+
+            <div class="system-row">
+                <span class="green"></span>
+                ORBIT SYSTEM
+            </div>
+
+            <div class="system-row">
+                <span class="yellow"></span>
+                STARLINK SIM
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- HOME HUD -->
+
+    <section
+        id="homePanel"
+        class="hud-panel"
+    >
+
+        <div class="eyebrow">
+            SOLAR SYSTEM
+        </div>
+
+        <h1 id="objectTitle">
+            EARTH
+        </h1>
+
+        <p id="objectDescription">
+            Ziemia — trzecia planeta od Słońca.
+            Kliknij obiekt, aby rozpocząć obserwację.
+        </p>
+
+
+        <div class="hud-buttons">
+
+            <button id="focusObject">
+                FOCUS
+            </button>
+
+            <button id="resetView">
+                RESET VIEW
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- RIGHT INFO -->
+
+    <section
+        id="infoCard"
+        class="info-card"
+    >
+
+        <button
+            id="closeInfo"
+            class="close"
+        >
+            ×
+        </button>
+
+        <div class="info-label">
+            SELECTED OBJECT
+        </div>
+
+        <h2 id="infoName">
+            EARTH
+        </h2>
+
+        <p id="infoDescription">
+            Ziemia.
+        </p>
+
+
+        <div class="data-grid">
+
+            <div>
+                <span>TYPE</span>
+                <strong id="infoType">
+                    PLANET
+                </strong>
+            </div>
+
+            <div>
+                <span>DISTANCE</span>
+                <strong id="infoDistance">
+                    —
+                </strong>
+            </div>
+
+            <div>
+                <span>VELOCITY</span>
+                <strong id="infoVelocity">
+                    —
+                </strong>
+            </div>
+
+            <div>
+                <span>STATUS</span>
+                <strong id="infoStatus">
+                    ACTIVE
+                </strong>
+            </div>
+
+        </div>
+
+        <button
+            id="infoFocus"
+            class="primary"
+        >
+            TRACK OBJECT
+        </button>
+
+    </section>
+
+
+    <!-- BOTTOM HUD -->
+
+    <div class="bottom-hud">
+
+        <div>
+            <span>CAM</span>
+            <strong id="cameraData">
+                X 000 Y 000 Z 000
+            </strong>
+        </div>
+
+        <div>
+            <span>FPS</span>
+            <strong id="fps">
+                60
+            </strong>
+        </div>
+
+        <div>
+            <span>SIMULATION</span>
+            <strong>
+                ACTIVE
+            </strong>
+        </div>
+
+    </div>
+
+
+    <!-- MODAL -->
+
+    <div
+        id="sectionModal"
+        class="modal"
+    >
+
+        <div class="modal-box">
+
+            <button
+                id="closeModal"
+                class="close"
+            >
+                ×
+            </button>
+
+            <div
+                id="modalContent"
+            ></div>
+
+        </div>
+
+    </div>
+
 </div>
 
+
+<!-- THREE.JS -->
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <script src="script.js"></script>
 
 </body>
