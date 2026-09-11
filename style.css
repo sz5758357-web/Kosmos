@@ -1,835 +1,1058 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 :root {
-  --bg: #03050a;
-  --panel: rgba(8, 12, 20, .82);
-  --panel2: rgba(13, 18, 28, .9);
-  --line: rgba(255,255,255,.08);
-  --text: #f3f6fb;
-  --muted: #7d8797;
-  --green: #43f59b;
-  --cyan: #45d7ff;
-  --orange: #ff9f43;
+    --tlo: #02030a;
+    --panel: rgba(8, 11, 23, .88);
+    --panel2: rgba(13, 17, 32, .9);
+    --linia: rgba(255,255,255,.09);
+    --tekst: #f4f7ff;
+    --muted: #7e879e;
+    --niebieski: #5da9ff;
+    --cyan: #35e5ff;
+    --zielony: #45f59b;
+    --fiolet: #8d6cff;
+    --czerwony: #ff5574;
 }
 
-html,
-body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: var(--bg);
-  color: var(--text);
-  font-family: Inter, Arial, sans-serif;
+* {
+    box-sizing: border-box;
 }
 
 body {
-  background:
-    radial-gradient(circle at 50% 30%, #101a2d 0%, #03050a 55%);
+    font-family: Inter, sans-serif;
+    color: var(--tekst);
 }
 
 button,
 input {
-  font: inherit;
+    font-family: inherit;
 }
 
-button {
-  cursor: pointer;
+#ekranStartowy {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background:
+        radial-gradient(circle at center, #10172d 0%, #04050d 45%, #010207 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    transition: opacity .7s ease, visibility .7s ease;
 }
 
-#loading {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: #020307;
-  transition: opacity .7s ease;
+#ekranStartowy.ukryty {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.logoStart {
+    font-family: "Space Grotesk";
+    font-size: clamp(45px, 9vw, 90px);
+    font-weight: 800;
+    letter-spacing: 15px;
+}
+
+.podtytulStart {
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 5px;
+    margin-top: 8px;
+}
+
+.pasekLadowania {
+    width: min(360px, 70vw);
+    height: 3px;
+    background: #151a2b;
+    margin-top: 40px;
+    overflow: hidden;
+}
+
+#postepLadowania {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--fiolet), var(--cyan));
+    transition: width .2s;
+}
+
+#tekstLadowania {
+    margin-top: 15px;
+    color: #69738c;
+    font-size: 11px;
+}
+
+
+#aplikacja {
+    position: fixed;
+    inset: 0;
+    background: var(--tlo);
+}
+
+.gora {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 72px;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 25px;
+    background: rgba(2,3,10,.72);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--linia);
+}
+
+.marka {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #55617d;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #141a30, #080a13);
+}
+
+.nazwa {
+    font-family: "Space Grotesk";
+    font-weight: 700;
+    letter-spacing: 4px;
+}
+
+.opis {
+    font-size: 8px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-top: 3px;
+}
+
+.statusGlowny {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #aab3c7;
+}
+
+.kropka,
+.pudelkoLive span {
+    width: 7px;
+    height: 7px;
+    background: var(--zielony);
+    border-radius: 50%;
+    box-shadow: 0 0 15px var(--zielony);
+    animation: puls 1.5s infinite;
+}
+
+@keyframes puls {
+    50% {
+        opacity: .35;
+        transform: scale(.7);
+    }
+}
+
+.czas {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.czas small {
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.czas strong {
+    font-family: monospace;
+    font-size: 14px;
+}
+
+
+.menu {
+    position: absolute;
+    left: 0;
+    top: 72px;
+    bottom: 0;
+    width: 86px;
+    z-index: 40;
+    background: rgba(4,5,13,.82);
+    border-right: 1px solid var(--linia);
+    backdrop-filter: blur(20px);
+    padding: 15px 9px;
+}
+
+.menuPrzycisk {
+    width: 100%;
+    height: 70px;
+    border: 0;
+    background: transparent;
+    color: #69748d;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: .2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+}
+
+.menuPrzycisk span {
+    font-size: 18px;
+}
+
+.menuPrzycisk label {
+    font-size: 8px;
+    letter-spacing: .8px;
+    cursor: pointer;
+}
+
+.menuPrzycisk:hover,
+.menuPrzycisk.aktywny {
+    color: white;
+    background: linear-gradient(135deg, rgba(93,169,255,.13), rgba(141,108,255,.12));
+}
+
+.menuPrzycisk.aktywny {
+    box-shadow: inset 2px 0 var(--cyan);
+}
+
+
+#glowny {
+    position: absolute;
+    left: 86px;
+    top: 72px;
+    right: 0;
+    bottom: 0;
+}
+
+.strona {
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+
+.strona.aktywna {
+    display: block;
+}
+
+
+#stronaStart {
+    position: relative;
+    overflow: hidden;
+}
+
+#scena3D {
+    position: absolute;
+    inset: 0;
+}
+
+#scena3D canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+
+.nakladkaGora {
+    position: absolute;
+    z-index: 10;
+    left: 45px;
+    top: 40px;
+    right: 45px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
 }
 
-.loader-logo {
-  font-size: clamp(36px, 7vw, 80px);
-  font-weight: 900;
-  letter-spacing: .25em;
+.etykieta {
+    font-size: 9px;
+    color: var(--cyan);
+    letter-spacing: 3px;
+    margin-bottom: 10px;
 }
 
-.loader-line {
-  width: min(380px, 70vw);
-  height: 2px;
-  margin-top: 30px;
-  background: #161b25;
-  overflow: hidden;
+.nakladkaGora h1 {
+    font-family: "Space Grotesk";
+    font-size: clamp(30px, 4vw, 58px);
+    line-height: .92;
+    letter-spacing: -2px;
+    margin: 0;
 }
 
-.loader-line span {
-  display: block;
-  height: 100%;
-  width: 0%;
-  background: var(--cyan);
-  transition: width .25s;
+.nakladkaGora h1 span {
+    color: #8c97b0;
 }
 
-#loadText {
-  margin-top: 14px;
-  font-size: 10px;
-  color: #6f7888;
-  letter-spacing: .2em;
+.nakladkaGora p {
+    font-size: 12px;
+    color: #727d95;
+    max-width: 420px;
+    line-height: 1.5;
 }
 
-#app {
-  width: 100%;
-  height: 100%;
+.pudelkoLive {
+    height: 31px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 12px;
+    border: 1px solid rgba(69,245,155,.2);
+    background: rgba(69,245,155,.05);
+    color: #a6eec6;
+    font-size: 8px;
+    letter-spacing: 2px;
 }
 
-.topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 25px 0 90px;
-  border-bottom: 1px solid var(--line);
-  background: rgba(3,5,10,.72);
-  backdrop-filter: blur(20px);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brand-mark {
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--cyan);
-  display: grid;
-  place-items: center;
-  font-weight: 900;
-  color: var(--cyan);
+
+.telemetria {
+    position: absolute;
+    z-index: 20;
+    left: 45px;
+    bottom: 48px;
+    display: flex;
+    gap: 8px;
+}
+
+.telemetryBox {
+    min-width: 125px;
+    padding: 11px 14px;
+    background: rgba(5,7,15,.72);
+    border: 1px solid var(--linia);
+    backdrop-filter: blur(14px);
 }
 
-.brand strong {
-  display: block;
-  font-size: 15px;
-  letter-spacing: .18em;
-}
+.telemetryBox small {
+    display: block;
+    color: var(--muted);
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+}
 
-.brand span {
-  display: block;
-  color: var(--muted);
-  font-size: 8px;
-  letter-spacing: .2em;
-  margin-top: 2px;
+.telemetryBox strong {
+    font-size: 11px;
 }
 
-.top-status {
-  display: flex;
-  align-items: center;
-  gap: 25px;
+
+.panelISS {
+    position: absolute;
+    z-index: 30;
+    right: 30px;
+    bottom: 45px;
+    width: 370px;
+    padding: 15px;
+    background: rgba(5,7,15,.78);
+    border: 1px solid var(--linia);
+    backdrop-filter: blur(18px);
 }
 
-.live {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--green);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .15em;
-}
-
-.live i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 12px var(--green);
-  animation: pulse 1.4s infinite;
-}
+.panelNaglowek {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 8px;
+    color: #b5bfd1;
+    letter-spacing: 1px;
+}
 
-.utc {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  color: var(--muted);
-  font-size: 9px;
-}
-
-.utc strong {
-  color: var(--text);
-  font-family: monospace;
+.panelNaglowek > div {
+    display: flex;
+    align-items: center;
+    gap: 7px;
 }
 
-@keyframes pulse {
-  50% {
-    opacity: .3;
-  }
-}
+.zielonaKropka {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--zielony);
+}
 
-.sidebar {
-  position: fixed;
-  z-index: 101;
-  left: 0;
-  top: 70px;
-  bottom: 0;
-  width: 70px;
-  border-right: 1px solid var(--line);
-  background: rgba(4,6,11,.85);
-  backdrop-filter: blur(20px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 20px;
-  gap: 8px;
+.panelNaglowek > span {
+    color: #657087;
 }
 
-.nav {
-  width: 52px;
-  height: 55px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: #697384;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: .2s;
+.issGlowna {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 17px;
 }
 
-.nav span {
-  font-size: 16px;
+.issWartosc small {
+    color: var(--muted);
+    display: block;
+    font-size: 7px;
+    margin-bottom: 5px;
 }
 
-.nav label {
-  font-size: 6px;
-  letter-spacing: .08em;
+.issWartosc strong {
+    font-size: 14px;
 }
 
-.nav:hover,
-.nav.active {
-  color: var(--cyan);
-  border-color: rgba(69,215,255,.18);
-  background: rgba(69,215,255,.06);
+.issWartosc span {
+    color: #6d7890;
+    font-size: 8px;
 }
 
-main {
-  width: 100%;
-  height: 100%;
-  padding-left: 70px;
-  padding-top: 70px;
+
+.instrukcja {
+    position: absolute;
+    z-index: 20;
+    top: 50%;
+    right: 20px;
+    writing-mode: vertical-rl;
+    color: #5d667a;
+    font-size: 8px;
+    letter-spacing: 1px;
 }
 
-.section {
-  width: 100%;
-  height: 100%;
-  display: none;
+.instrukcja span {
+    color: #b7c0d1;
+    margin: 10px 0;
 }
+
 
-.section.active {
-  display: block;
+.strona:not(#stronaStart) {
+    padding: 40px;
+    background:
+        radial-gradient(circle at 70% 0%, rgba(58,91,160,.1), transparent 35%),
+        #03050d;
 }
 
-.scene {
-  position: relative;
-  height: 62%;
-  min-height: 420px;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(40,70,120,.15), transparent 45%),
-    #020409;
+.stronaNaglowek {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
 }
 
-#space {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+.stronaNaglowek h2 {
+    font-family: "Space Grotesk";
+    font-size: clamp(30px, 4vw, 48px);
+    margin: 0;
+    letter-spacing: -2px;
 }
 
-.scene-grid {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
-  background-size: 60px 60px;
-  mask-image: linear-gradient(to bottom, black, transparent);
+.stronaNaglowek p {
+    color: var(--muted);
+    font-size: 12px;
 }
 
-.hud {
-  position: absolute;
-  z-index: 5;
-  pointer-events: none;
-  font-family: monospace;
+.wyszukiwarka {
+    width: 280px;
+    height: 42px;
+    border: 1px solid var(--linia);
+    display: flex;
+    align-items: center;
+    background: #070a14;
 }
 
-.hud-top-left {
-  top: 30px;
-  left: 35px;
+.wyszukiwarka input {
+    flex: 1;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    color: white;
+    background: transparent;
+    padding: 0 13px;
 }
 
-.hud-top-right {
-  top: 30px;
-  right: 35px;
-  text-align: right;
-  color: var(--muted);
-  font-size: 9px;
+.wyszukiwarka span {
+    padding-right: 13px;
+    color: #677188;
 }
 
-.hud-top-right strong {
-  display: block;
-  color: var(--text);
-  font-size: 20px;
-  margin-top: 4px;
+
+.statystykiSatelitow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
-.hud-title {
-  font-size: 9px;
-  color: var(--cyan);
-  letter-spacing: .18em;
+.kartaStat {
+    padding: 17px;
+    background: var(--panel);
+    border: 1px solid var(--linia);
 }
 
-.hud-value {
-  margin-top: 5px;
-  font-size: 11px;
+.kartaStat small {
+    color: var(--muted);
+    display: block;
+    font-size: 8px;
+    letter-spacing: 1px;
+    margin-bottom: 9px;
 }
 
-.scene-controls {
-  position: absolute;
-  z-index: 10;
-  right: 30px;
-  bottom: 25px;
-  display: flex;
-  gap: 7px;
+.kartaStat strong {
+    font-size: 21px;
 }
+
 
-.scene-controls button,
-.primary {
-  border: 1px solid rgba(69,215,255,.25);
-  color: var(--cyan);
-  background: rgba(5,10,17,.85);
-  padding: 10px 14px;
-  font-size: 9px;
-  letter-spacing: .12em;
+.satelityLayout {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 15px;
+    min-height: 400px;
 }
 
-.scene-controls button:hover,
-.primary:hover {
-  background: rgba(69,215,255,.12);
+.listaSatelitow,
+.szczegolySatelity {
+    background: var(--panel);
+    border: 1px solid var(--linia);
 }
 
-.earth-label {
-  position: absolute;
-  left: 50%;
-  bottom: 30px;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #b9c3d3;
-  font: 9px monospace;
-  letter-spacing: .15em;
-  pointer-events: none;
+.listaSatelitow {
+    overflow: auto;
 }
 
-.label-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 10px var(--green);
+.satelitaItem {
+    padding: 15px;
+    border-bottom: 1px solid var(--linia);
+    cursor: pointer;
+    transition: .2s;
 }
 
-.dashboard {
-  height: 38%;
-  display: grid;
-  grid-template-columns: 1.2fr 1fr .8fr;
-  gap: 1px;
-  background: var(--line);
+.satelitaItem:hover,
+.satelitaItem.wybrany {
+    background: rgba(93,169,255,.08);
 }
 
-.card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  padding: 20px;
+.satelitaItem strong {
+    display: block;
+    font-size: 12px;
 }
 
-.dashboard > .card {
-  border: 0;
-  border-radius: 0;
+.satelitaItem span {
+    display: block;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 9px;
 }
 
-.card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: #788395;
-  font-size: 8px;
-  letter-spacing: .16em;
+.ladowanieLista {
+    padding: 40px;
+    color: var(--muted);
+    text-align: center;
 }
 
-.green {
-  color: var(--green);
+
+.szczegolySatelity {
+    padding: 30px;
 }
 
-.main-card h1 {
-  font-size: clamp(30px, 4vw, 58px);
-  line-height: .9;
-  letter-spacing: -.04em;
-  margin-top: 18px;
+.pustyStan {
+    height: 100%;
+    min-height: 330px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
-.main-card p {
-  max-width: 400px;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.7;
-  margin-top: 15px;
+.duzaIkona {
+    font-size: 50px;
+    color: var(--cyan);
+    margin-bottom: 10px;
 }
 
-.big-time {
-  margin-top: 15px;
-  font-family: monospace;
-  font-size: 17px;
-  color: var(--cyan);
+.pustyStan h3 {
+    margin: 0 0 8px;
 }
 
-.telemetry-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  margin-top: 25px;
+.pustyStan p {
+    color: var(--muted);
+    max-width: 350px;
+    font-size: 11px;
 }
 
-.telemetry-grid span,
-.telemetry-grid small {
-  color: var(--muted);
-  font-size: 8px;
+
+.daneSatelity h3 {
+    margin: 0;
+    font-size: 24px;
 }
 
-.telemetry-grid strong {
-  font-family: monospace;
-  font-size: 20px;
-  margin-right: 3px;
+.daneSatelity .typ {
+    color: var(--cyan);
+    font-size: 9px;
+    letter-spacing: 2px;
+    margin: 6px 0 25px;
 }
 
-.data-age {
-  margin-top: 17px;
-  color: var(--muted);
-  font-size: 8px;
+.daneGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
 }
 
-.data-age strong {
-  color: var(--cyan);
+.danePole {
+    padding: 15px;
+    background: rgba(255,255,255,.025);
+    border: 1px solid var(--linia);
 }
 
-.system {
-  display: flex;
-  justify-content: space-between;
-  padding: 13px 0;
-  border-bottom: 1px solid var(--line);
-  font-size: 8px;
+.danePole small {
+    color: var(--muted);
+    font-size: 8px;
+    display: block;
+    margin-bottom: 6px;
 }
 
-.system b {
-  color: var(--cyan);
+.danePole strong {
+    font-size: 14px;
 }
+
 
-.page {
-  overflow: auto;
-  padding: 35px;
+.listaMisji {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
 }
 
-.page-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  margin-bottom: 25px;
+.misja {
+    background: var(--panel);
+    border: 1px solid var(--linia);
+    padding: 20px;
 }
 
-.eyebrow {
-  color: var(--cyan);
-  font-size: 9px;
-  letter-spacing: .18em;
+.misjaData {
+    color: var(--cyan);
+    font-size: 9px;
+    letter-spacing: 1px;
 }
 
-.page h2 {
-  margin-top: 7px;
-  font-size: clamp(30px, 5vw, 55px);
-  letter-spacing: -.04em;
+.misja h3 {
+    font-size: 17px;
+    margin: 9px 0;
 }
 
-.search input {
-  width: 260px;
-  padding: 12px 15px;
-  border: 1px solid var(--line);
-  background: #080c14;
-  color: white;
-  outline: none;
+.misja p {
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.5;
 }
 
-.sat-layout {
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 18px;
+.misjaFirma {
+    color: #aab4c8;
+    font-size: 9px;
 }
 
-.sat-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 8px;
-  align-content: start;
+
+.planetyGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
 }
 
-.sat-item {
-  border: 1px solid var(--line);
-  background: var(--panel);
-  padding: 15px;
-  cursor: pointer;
-  transition: .2s;
+.planetaKarta {
+    min-height: 180px;
+    padding: 20px;
+    border: 1px solid var(--linia);
+    background:
+        radial-gradient(circle at 75% 30%, rgba(100,130,255,.15), transparent 35%),
+        var(--panel);
+    position: relative;
+    overflow: hidden;
 }
 
-.sat-item:hover,
-.sat-item.selected {
-  border-color: rgba(69,215,255,.4);
-  background: rgba(69,215,255,.06);
+.planetaKula {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #d8eaff, #526a91 35%, #151a27 70%);
+    box-shadow: 0 0 40px rgba(90,150,255,.2);
+    margin-bottom: 15px;
 }
 
-.sat-item strong {
-  display: block;
-  font-size: 11px;
-  margin-bottom: 8px;
+.planetaKarta:nth-child(2) .planetaKula {
+    background: radial-gradient(circle at 35% 30%, #fff1b0, #b98742 40%, #432712);
 }
 
-.sat-item span {
-  color: var(--muted);
-  font: 8px monospace;
+.planetaKarta:nth-child(3) .planetaKula {
+    background: radial-gradient(circle at 35% 30%, #d9f7ff, #2779a4 45%, #08213b);
 }
 
-.sat-info {
-  align-self: start;
-  position: sticky;
-  top: 0;
+.planetaKarta:nth-child(4) .planetaKula {
+    background: radial-gradient(circle at 35% 30%, #ffd3a3, #a54927 45%, #39160e);
 }
 
-.sat-info h3 {
-  margin: 25px 0;
-  font-size: 25px;
+.planetaKarta:nth-child(5) .planetaKula {
+    background: radial-gradient(circle at 35% 30%, #ffe9b0, #9b713f 40%, #312516);
 }
 
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 9px;
+.planetaKarta:nth-child(6) .planetaKula {
+    background: radial-gradient(circle at 35% 30%, #fff2d1, #bda56b 40%, #4a3b27);
 }
 
-.info-row strong {
-  color: var(--text);
-  font-family: monospace;
+.planetaKarta:nth-child(7) .planetaKula {
+    background: radial-gradient(circle at 35% 30%, #d5ffff, #55a3ae 45%, #102d38);
 }
 
-.primary {
-  width: 100%;
-  margin-top: 20px;
+.planetaKarta:nth-child(8) .planetaKula {
+    background: radial-gradient(circle at 35% 30%, #d1dcff, #465fc0 45%, #10163a);
 }
 
-.mission-list {
-  display: grid;
-  gap: 8px;
+.planetaKarta h3 {
+    margin: 0;
+    font-size: 15px;
 }
 
-.mission {
-  display: grid;
-  grid-template-columns: 120px 1fr 180px;
-  gap: 20px;
-  align-items: center;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  padding: 20px;
+.planetaKarta p {
+    color: var(--muted);
+    font-size: 9px;
 }
+
 
-.mission-date {
-  color: var(--cyan);
-  font-family: monospace;
-  font-size: 11px;
+.aktualnoscGlowna {
+    background: var(--panel);
+    border: 1px solid var(--linia);
+    min-height: 400px;
+    overflow: hidden;
 }
 
-.mission h3 {
-  font-size: 15px;
+.apod {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    min-height: 400px;
 }
 
-.mission p {
-  color: var(--muted);
-  font-size: 9px;
-  margin-top: 5px;
+.apod img {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    object-fit: cover;
 }
 
-.mission-company {
-  text-align: right;
-  color: var(--muted);
-  font-size: 9px;
+.apodTekst {
+    padding: 35px;
 }
 
-.planet-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+.apodTekst small {
+    color: var(--cyan);
+    letter-spacing: 2px;
+    font-size: 8px;
 }
 
-.planet {
-  min-height: 180px;
-  border: 1px solid var(--line);
-  background:
-    radial-gradient(circle at 70% 30%, rgba(80,120,180,.15), transparent 50%),
-    var(--panel);
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
+.apodTekst h3 {
+    font-size: 28px;
+    margin: 15px 0;
 }
 
-.planet .orb {
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  right: 20px;
-  top: 20px;
-  background: radial-gradient(circle at 35% 30%, #b9c3d3, #222937 70%);
-  box-shadow: 0 0 40px rgba(100,150,255,.15);
+.apodTekst p {
+    color: #8892a8;
+    font-size: 11px;
+    line-height: 1.8;
 }
 
-.planet h3 {
-  position: relative;
-  z-index: 2;
-  margin-top: 100px;
+
+.systemGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
 }
 
-.planet span {
-  position: relative;
-  z-index: 2;
-  color: var(--muted);
-  font: 8px monospace;
+.systemKarta {
+    padding: 25px;
+    background: var(--panel);
+    border: 1px solid var(--linia);
+    display: flex;
+    align-items: center;
+    gap: 18px;
 }
 
-.news-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+.systemIkona {
+    width: 45px;
+    height: 45px;
+    display: grid;
+    place-items: center;
+    background: rgba(93,169,255,.08);
+    border: 1px solid rgba(93,169,255,.15);
+    color: var(--cyan);
 }
 
-.news-card {
-  border: 1px solid var(--line);
-  background: var(--panel);
-  padding: 25px;
-  min-height: 190px;
+.systemKarta small {
+    display: block;
+    color: var(--muted);
+    font-size: 8px;
+    margin-bottom: 7px;
 }
 
-.news-card > span {
-  color: var(--cyan);
-  font: 8px monospace;
+.systemKarta strong {
+    font-size: 13px;
+    color: var(--zielony);
 }
 
-.news-card h3 {
-  margin-top: 25px;
-  font-size: 18px;
+.informacjaSystemowa {
+    margin-top: 15px;
+    padding: 25px;
+    background: var(--panel);
+    border: 1px solid var(--linia);
 }
 
-.news-card p {
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 1.7;
-  margin-top: 12px;
+.informacjaSystemowa h3 {
+    font-size: 11px;
+    letter-spacing: 1px;
 }
 
-.empty {
-  color: var(--muted);
-  padding: 30px;
-  border: 1px dashed var(--line);
-  text-align: center;
+.informacjaSystemowa p {
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.7;
 }
 
-#toast {
-  position: fixed;
-  left: 50%;
-  bottom: 25px;
-  transform: translate(-50%, 100px);
-  z-index: 500;
-  padding: 12px 18px;
-  border: 1px solid var(--line);
-  background: #080c14;
-  color: white;
-  font: 9px monospace;
-  transition: .3s;
+
+#powiadomienie {
+    position: fixed;
+    z-index: 999;
+    bottom: 25px;
+    left: 50%;
+    transform: translate(-50%, 20px);
+    padding: 11px 18px;
+    background: rgba(10,13,25,.95);
+    border: 1px solid var(--linia);
+    color: white;
+    font-size: 10px;
+    opacity: 0;
+    transition: .3s;
+    pointer-events: none;
 }
 
-#toast.show {
-  transform: translate(-50%, 0);
+#powiadomienie.pokaz {
+    opacity: 1;
+    transform: translate(-50%, 0);
 }
+
 
 @media (max-width: 1000px) {
 
-  .dashboard {
-    grid-template-columns: 1fr 1fr;
-  }
+    .panelISS {
+        width: 330px;
+    }
 
-  .systems {
-    display: none;
-  }
+    .telemetria {
+        bottom: 25px;
+    }
 
-  .sat-layout {
-    grid-template-columns: 1fr;
-  }
+    .telemetryBox {
+        min-width: 105px;
+    }
 
-  .sat-info {
-    position: static;
-  }
+    .planetyGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
-  .planet-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .news-grid {
-    grid-template-columns: 1fr 1fr;
-  }
 }
+
 
 @media (max-width: 700px) {
 
-  body {
-    overflow: auto;
-  }
+    .gora {
+        height: 60px;
+        padding: 0 14px;
+    }
 
-  .topbar {
-    height: 58px;
-    padding: 0 15px;
-  }
+    .logo {
+        width: 30px;
+        height: 30px;
+    }
 
-  .brand-mark {
-    width: 29px;
-    height: 29px;
-  }
+    .nazwa {
+        font-size: 12px;
+    }
 
-  .brand strong {
-    font-size: 12px;
-  }
+    .opis {
+        display: none;
+    }
 
-  .brand span {
-    font-size: 6px;
-  }
+    .statusGlowny {
+        display: none;
+    }
 
-  .utc {
-    display: none;
-  }
+    .czas small {
+        display: none;
+    }
 
-  .sidebar {
-    top: auto;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 62px;
-    flex-direction: row;
-    justify-content: space-around;
-    padding: 0;
-    border-right: 0;
-    border-top: 1px solid var(--line);
-  }
+    .czas strong {
+        font-size: 11px;
+    }
 
-  .nav {
-    width: 60px;
-    height: 58px;
-  }
+    .menu {
+        top: auto;
+        bottom: 0;
+        height: 66px;
+        width: 100%;
+        padding: 4px;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        border-right: 0;
+        border-top: 1px solid var(--linia);
+    }
 
-  main {
-    padding-left: 0;
-    padding-top: 58px;
-    padding-bottom: 62px;
-    height: 100vh;
-  }
+    .menuPrzycisk {
+        height: 58px;
+    }
 
-  .scene {
-    height: 55vh;
-    min-height: 380px;
-  }
+    .menuPrzycisk span {
+        font-size: 15px;
+    }
 
-  .hud-top-left {
-    top: 18px;
-    left: 18px;
-  }
+    .menuPrzycisk label {
+        font-size: 6px;
+    }
 
-  .hud-top-right {
-    top: 18px;
-    right: 18px;
-  }
+    #glowny {
+        left: 0;
+        top: 60px;
+        bottom: 66px;
+    }
 
-  .scene-controls {
-    left: 15px;
-    right: 15px;
-    bottom: 15px;
-  }
+    .nakladkaGora {
+        left: 20px;
+        top: 20px;
+        right: 20px;
+    }
 
-  .scene-controls button {
-    flex: 1;
-  }
+    .nakladkaGora h1 {
+        font-size: 31px;
+    }
 
-  .dashboard {
-    display: block;
-    height: auto;
-  }
+    .nakladkaGora p {
+        font-size: 9px;
+        max-width: 240px;
+    }
 
-  .dashboard > .card {
-    min-height: 190px;
-  }
+    .pudelkoLive {
+        font-size: 7px;
+        height: 26px;
+    }
 
-  .main-card h1 {
-    font-size: 42px;
-  }
+    .panelISS {
+        left: 15px;
+        right: 15px;
+        bottom: 80px;
+        width: auto;
+    }
 
-  .page {
-    padding: 20px 15px 90px;
-  }
+    .issGlowna {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
-  .page-head {
-    display: block;
-  }
+    .telemetria {
+        left: 15px;
+        right: 15px;
+        bottom: 20px;
+        gap: 4px;
+    }
 
-  .search {
-    margin-top: 15px;
-  }
+    .telemetryBox {
+        min-width: 0;
+        flex: 1;
+        padding: 8px;
+    }
 
-  .search input {
-    width: 100%;
-  }
+    .telemetryBox small {
+        font-size: 6px;
+    }
 
-  .sat-list {
-    grid-template-columns: 1fr;
-  }
+    .telemetryBox strong {
+        font-size: 9px;
+    }
 
-  .mission {
-    grid-template-columns: 1fr;
-  }
+    .instrukcja {
+        display: none;
+    }
 
-  .mission-company {
-    text-align: left;
-  }
+    .strona:not(#stronaStart) {
+        padding: 20px 15px;
+    }
 
-  .planet-grid,
-  .news-grid {
-    grid-template-columns: 1fr;
-  }
+    .stronaNaglowek {
+        display: block;
+    }
+
+    .stronaNaglowek h2 {
+        font-size: 31px;
+    }
+
+    .wyszukiwarka {
+        width: 100%;
+        margin-top: 15px;
+    }
+
+    .statystykiSatelitow {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .satelityLayout {
+        grid-template-columns: 1fr;
+    }
+
+    .szczegolySatelity {
+        min-height: 350px;
+    }
+
+    .listaMisji {
+        grid-template-columns: 1fr;
+    }
+
+    .planetyGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .apod {
+        display: block;
+    }
+
+    .apod img {
+        min-height: 240px;
+        height: 240px;
+    }
+
+    .apodTekst {
+        padding: 20px;
+    }
+
+    .systemGrid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 420px) {
+
+    .planetyGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .statystykiSatelitow {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .kartaStat strong {
+        font-size: 17px;
+    }
+
+    .panelISS {
+        padding: 11px;
+    }
+
+    .issWartosc strong {
+        font-size: 12px;
+    }
 
 }
