@@ -2,107 +2,92 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#02030a">
-    <meta name="description" content="COSMOS 3D — interaktywna podróż po Układzie Słonecznym">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>COSMOS 3D</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <div id="loading">
-        <div class="loader"></div>
-        <div class="loading-title">COSMOS</div>
-        <div class="loading-text">ŁADOWANIE WSZECHŚWIATA...</div>
+
+<div id="loading">
+    <div class="loader-logo">COSMOS</div>
+    <div class="loader-bar">
+        <div></div>
     </div>
-    <div id="app">
-        <canvas id="space"></canvas>
-        <header class="topbar">
-            <div class="logo">
-                <div class="logo-icon"></div>
-                <span>COSMOS</span>
-                <small>3D</small>
-            </div>
-            <div class="status">
-                <span class="status-dot"></span>
-                SYSTEM ONLINE
-            </div>
-        </header>
-        <div class="info">
-            <div class="eyebrow">
-                SOLAR SYSTEM / 01
-            </div>
-            <h1 id="objectName">
-                UKŁAD<br>
-                <span>SŁONECZNY</span>
-            </h1>
-            <p id="objectDescription">
-                Przemierzaj Układ Słoneczny w pełnym 3D.
-                Obracaj widok, przybliżaj i wybieraj planety.
-            </p>
-            <button id="exploreButton">
-                <span>EXPLORE</span>
-                <b>→</b>
-            </button>
+    <p>Ładowanie kosmosu...</p>
+</div>
+
+<div id="app">
+
+    <header>
+        <div class="logo">
+            COSMOS<span>3D</span>
         </div>
-        <div class="controls">
-            <div class="control-title">
-                STEROWANIE
-            </div>
-            <div>
-                <span class="control-icon">↔</span>
-                PRZESUŃ
-            </div>
-            <div>
-                <span class="control-icon">◉</span>
-                ZOOM
-            </div>
-            <div>
-                <span class="control-icon">⌁</span>
-                OBRÓĆ
-            </div>
+
+        <div class="status">
+            ● SYSTEM ONLINE
         </div>
-        <div class="planet-panel" id="planetPanel">
-            <button id="closePanel">×</button>
-            <div class="panel-label">
-                PLANET DETECTED
-            </div>
-            <h2 id="panelName">ZIEMIA</h2>
-            <div class="panel-line"></div>
-            <p id="panelDescription">
-                Nasza planeta.
-            </p>
-            <div class="planet-data">
-                <div>
-                    <span>TYPE</span>
-                    <strong id="panelType">TERRESTRIAL</strong>
-                </div>
-                <div>
-                    <span>DIAMETER</span>
-                    <strong id="panelDiameter">12 742 km</strong>
-                </div>
-                <div>
-                    <span>YEAR</span>
-                    <strong id="panelYear">365 DAYS</strong>
-                </div>
-            </div>
-            <button id="focusButton">
-                FOCUS PLANET
-            </button>
-        </div>
-        <div class="bottom">
-            <div class="coordinates">
-                <span>X</span>
-                <b id="coordX">000</b>
-                <span>Y</span>
-                <b id="coordY">000</b>
-                <span>Z</span>
-                <b id="coordZ">000</b>
-            </div>
-            <div class="hint">
-                DRAG TO EXPLORE
-            </div>
-        </div>
+    </header>
+
+    <div class="info">
+        <div class="small">UKŁAD SŁONECZNY</div>
+        <h1 id="planetName">KOSMOS</h1>
+        <p id="planetInfo">
+            Przeciągnij ekran, aby obracać widok.
+            Przybliżaj dwoma palcami.
+        </p>
     </div>
-    <script type="module" src="script.js"></script>
+
+    <div id="planetCard">
+
+        <button id="close">×</button>
+
+        <div class="card-label">
+            OBIEKT
+        </div>
+
+        <h2 id="cardName">
+            ZIEMIA
+        </h2>
+
+        <p id="cardDescription">
+            Nasza planeta.
+        </p>
+
+        <div class="stats">
+
+            <div>
+                <span>ŚREDNICA</span>
+                <b id="diameter">12 742 km</b>
+            </div>
+
+            <div>
+                <span>ROK</span>
+                <b id="year">365 dni</b>
+            </div>
+
+        </div>
+
+        <button id="focus">
+            OBEJRZYJ PLANETĘ
+        </button>
+
+    </div>
+
+    <div class="bottom">
+        <span>3D SPACE EXPLORER</span>
+        <span id="coordinates">X 000 Y 000 Z 000</span>
+    </div>
+
+    <canvas id="space"></canvas>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="script.js"></script>
+
 </body>
 </html>
