@@ -1,1084 +1,1523 @@
 import * as THREE from "three";
+import * as satellite from "satellite.js";
 
-const SATELLITE_API =
-  "https://celestrak.org/NORAD/elements/gp.php?GROUP=STATIONS&FORMAT=JSON";
 
-const STARLINK_API =
-  "https://celestrak.org/NORAD/elements/gp.php?GROUP=STARLINK&FORMAT=JSON";
+// ============================================================
+// KONFIGURACJA
+// ============================================================
 
-const LAUNCH_API =
-  "https://ll.thespacedevs.com/2.3.0/launches/?limit=12&ordering=net";
+const API = {
+    ISS: "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=JSON",
+    STARLINK: "https://celestrak.org/NORAD/elements/gp.php?GROUP=STARLINK&FORMAT=JSON",
+    MISJE: "https://ll.thespacedevs.com/2.3.0/launches/?limit=15&ordering=net",
+    NASA: "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY"
+};
 
-const THREE_SCALE = 8;
 
-let scene;
-let camera;
+let satelity = [];
+let issDane = null;
+let wybranySatelita = null;
+
+let scena;
+let kamera;
 let renderer;
-let earth;
-let moon;
-let sun;
-let satellites = [];
-let satelliteData = [];
-let selectedSatellite = null;
-let followTarget = null;
-let controlsTarget = new THREE.Vector3(0, 0, 0);
+let ziemia;
+let ksiezyc;
+let slonce;
+let grupaSatelitow;
 
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+let raycaster;
+let mysz;
+
+let odlegloscKamery = 3.7;
+let obracanie = false;
+let ostatniaPozycja = { x: 0, y: 0 };
+
+
+// ============================================================
+// ELEMENTY
+// ============================================================
 
 const $ = id => document.getElementById(id);
 
-const state = {
-  iss: null,
-  starlink: [],
-  lastSatelliteUpdate: null,
-  lastMissionUpdate: null
-};
+const ekranStartowy = $("ekranStartowy");
+const postep = $("postepLadowania");
+const tekstLadowania = $("tekstLadowania");
 
-function setLoad(progress, text) {
-  $("loadProgress").style.width = progress + "%";
-  $("loadText").textContent = text;
-}
 
-function toast(text) {
-  const el = $("toast");
-  el.textContent = text;
-  el.classList.add("show");
+// ============================================================
+// START
+// ============================================================
 
-  setTimeout(() => {
-    el.classList.remove("show");
-  }, 2500);
-}
+window.addEventListener("load", async () => {
 
-function init() {
+    await animacjaStartowa();
 
-  setLoad(15, "LOADING 3D ENGINE");
+    inicjalizuj3D();
+    inicjalizujMenu();
+    inicjalizujPlanety();
+    inicjalizujInterakcje();
 
-  scene = new THREE.Scene();
+    await Promise.allSettled([
+        pobierzISS(),
+        pobierzStarlink(),
+        pobierzMisje(),
+        pobierzNASA()
+    ]);
 
-  scene.background = new THREE.Color(0x020409);
-
-  camera = new THREE.PerspectiveCamera(
-    45,
-    innerWidth / innerHeight,
-    .01,
-    10000
-  );
-
-  camera.position.set(0, 1.8, 13);
-
-  renderer = new THREE.WebGLRenderer({
-    canvas: $("space"),
-    antialias: true,
-    powerPreference: "high-performance"
-  });
-
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-
-  renderer.setSize(
-    $("space").clientWidth,
-    $("space").clientHeight,
-    false
-  );
-
-  const ambient = new THREE.AmbientLight(0x667799, .45);
-  scene.add(ambient);
-
-  const sunlight = new THREE.PointLight(0xffffff, 3, 100);
-  sunlight.position.set(8, 4, 7);
-  scene.add(sunlight);
-
-  createStars();
-  createSun();
-  createEarth();
-  createMoon();
-
-  setLoad(45, "BUILDING EARTH");
-
-  window.addEventListener("resize", resize);
-
-  $("space").addEventListener("pointerdown", onPointerDown);
-
-  setupNavigation();
-  setupControls();
-
-  setLoad(65, "CONNECTING ORBITAL DATA");
-
-  loadSatelliteData();
-
-  loadMissions();
-
-  setLoad(90, "STARTING MISSION CONTROL");
-
-  setTimeout(() => {
-    $("loading").style.opacity = "0";
+    aktualizujSystem();
 
     setTimeout(() => {
-      $("loading").remove();
-    }, 700);
+        ekranStartowy.classList.add("ukryty");
+    }, 500);
+});
 
-  }, 900);
 
-  updateClock();
+// ============================================================
+// EKRAN STARTOWY
+// ============================================================
 
-  setInterval(updateClock, 1000);
+async function animacjaStartowa() {
 
-  animate();
-}
+    const etapy = [
+        "Uruchamianie centrum kontroli...",
+        "Inicjalizacja wizualizacji 3D...",
+        "Łączenie z danymi orbitalnymi...",
+        "Pobieranie danych ISS...",
+        "Pobieranie danych satelitów...",
+        "Pobieranie danych misji...",
+        "Łączenie z NASA...",
+        "System gotowy."
+    ];
 
-function createStars() {
+    for (let i = 0; i < etapy.length; i++) {
 
-  const count = 8000;
+        tekstLadowania.textContent = etapy[i];
+        postep.style.width = `${((i + 1) / etapy.length) * 100}%`;
 
-  const positions = new Float32Array(count * 3);
-
-  for (let i = 0; i < count * 3; i += 3) {
-
-    const r = 60 + Math.random() * 180;
-
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(
-      2 * Math.random() - 1
-    );
-
-    positions[i] =
-      r * Math.sin(phi) * Math.cos(theta);
-
-    positions[i + 1] =
-      r * Math.cos(phi);
-
-    positions[i + 2] =
-      r * Math.sin(phi) * Math.sin(theta);
-  }
-
-  const geometry = new THREE.BufferGeometry();
-
-  geometry.setAttribute(
-    "position",
-    new THREE.BufferAttribute(positions, 3)
-  );
-
-  const material = new THREE.PointsMaterial({
-    color: 0xffffff,
-    size: .08,
-    transparent: true,
-    opacity: .8,
-    sizeAttenuation: true
-  });
-
-  scene.add(
-    new THREE.Points(geometry, material)
-  );
-}
-
-function createSun() {
-
-  const geometry = new THREE.SphereGeometry(
-    2.2,
-    48,
-    48
-  );
-
-  const material = new THREE.MeshBasicMaterial({
-    color: 0xffb52e
-  });
-
-  sun = new THREE.Mesh(
-    geometry,
-    material
-  );
-
-  sun.position.set(14, 3, -12);
-
-  scene.add(sun);
-
-  const glow = new THREE.PointLight(
-    0xffaa44,
-    4,
-    100
-  );
-
-  glow.position.copy(sun.position);
-
-  scene.add(glow);
-}
-
-function createEarth() {
-
-  const geometry = new THREE.SphereGeometry(
-    4,
-    96,
-    96
-  );
-
-  const material = new THREE.MeshStandardMaterial({
-    color: 0x2458a6,
-    roughness: .72,
-    metalness: .02
-  });
-
-  earth = new THREE.Mesh(
-    geometry,
-    material
-  );
-
-  scene.add(earth);
-
-  const atmosphereGeometry =
-    new THREE.SphereGeometry(
-      4.12,
-      64,
-      64
-    );
-
-  const atmosphereMaterial =
-    new THREE.MeshBasicMaterial({
-      color: 0x299cff,
-      transparent: true,
-      opacity: .08,
-      side: THREE.BackSide
-    });
-
-  earth.add(
-    new THREE.Mesh(
-      atmosphereGeometry,
-      atmosphereMaterial
-    )
-  );
-
-  addEarthLights();
-}
-
-function addEarthLights() {
-
-  const canvas =
-    document.createElement("canvas");
-
-  canvas.width = 1024;
-  canvas.height = 512;
-
-  const ctx = canvas.getContext("2d");
-
-  ctx.fillStyle = "#173e6f";
-  ctx.fillRect(0, 0, 1024, 512);
-
-  ctx.fillStyle = "#4f8fbd";
-
-  for (let i = 0; i < 500; i++) {
-
-    const x = Math.random() * 1024;
-    const y = Math.random() * 512;
-
-    const w = 2 + Math.random() * 12;
-    const h = 1 + Math.random() * 7;
-
-    ctx.fillRect(x, y, w, h);
-  }
-
-  const texture =
-    new THREE.CanvasTexture(canvas);
-
-  earth.material.map = texture;
-  earth.material.needsUpdate = true;
-}
-
-function createMoon() {
-
-  const geometry =
-    new THREE.SphereGeometry(
-      .9,
-      40,
-      40
-    );
-
-  const material =
-    new THREE.MeshStandardMaterial({
-      color: 0x9b9b9b,
-      roughness: 1
-    });
-
-  moon = new THREE.Mesh(
-    geometry,
-    material
-  );
-
-  scene.add(moon);
-}
-
-function updateMoon(time) {
-
-  const orbit =
-    time * .00015;
-
-  moon.position.set(
-    Math.cos(orbit) * 6.5,
-    Math.sin(orbit * .35) * .5,
-    Math.sin(orbit) * 6.5
-  );
-}
-
-async function loadSatelliteData() {
-
-  try {
-
-    const [stations, starlink] =
-      await Promise.all([
-        fetchJSON(SATELLITE_API),
-        fetchJSON(STARLINK_API)
-      ]);
-
-    const iss =
-      stations.find(
-        x =>
-          String(x.NORAD_CAT_ID) === "25544" ||
-          String(x.OBJECT_NAME || "")
-            .includes("ISS")
-      );
-
-    state.iss = iss || null;
-
-    state.starlink =
-      Array.isArray(starlink)
-        ? starlink.slice(0, 500)
-        : [];
-
-    satelliteData = [];
-
-    if (state.iss) {
-
-      satelliteData.push({
-        ...state.iss,
-        type: "ISS"
-      });
+        await sleep(180);
     }
+}
 
-    state.starlink.forEach(s => {
 
-      satelliteData.push({
-        ...s,
-        type: "STARLINK"
-      });
+// ============================================================
+// THREE.JS
+// ============================================================
+
+function inicjalizuj3D() {
+
+    scena = new THREE.Scene();
+
+    scena.background = new THREE.Color(0x02030a);
+
+    kamera = new THREE.PerspectiveCamera(
+        50,
+        1,
+        0.01,
+        1000
+    );
+
+    kamera.position.set(0, 0.4, odlegloscKamery);
+
+    renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        powerPreference: "high-performance"
     });
 
-    state.lastSatelliteUpdate = new Date();
-
-    $("objectCount").textContent =
-      satelliteData.length.toLocaleString();
-
-    $("orbitStatus").textContent = "ONLINE";
-    $("orbitStatus").className = "green";
-
-    $("systemISS").textContent =
-      state.iss ? "ONLINE" : "OFFLINE";
-
-    $("systemISS").className =
-      state.iss ? "green" : "";
-
-    $("systemStarlink").textContent =
-      state.starlink.length
-        ? "ONLINE"
-        : "OFFLINE";
-
-    $("systemStarlink").className =
-      state.starlink.length
-        ? "green"
-        : "";
-
-    $("issStatus").textContent =
-      state.iss ? "ONLINE" : "OFFLINE";
-
-    buildSatelliteList();
-
-    createSatelliteObjects();
-
-    toast(
-      `ORBIT DATA: ${satelliteData.length} objects loaded`
+    renderer.setPixelRatio(
+        Math.min(window.devicePixelRatio, 1.7)
     );
 
-  } catch (error) {
-
-    console.error(error);
-
-    $("orbitStatus").textContent = "OFFLINE";
-    $("orbitStatus").className = "";
-
-    $("issStatus").textContent = "OFFLINE";
-
-    toast(
-      "Nie udało się pobrać danych orbitalnych"
-    );
-  }
-}
-
-async function fetchJSON(url) {
-
-  const response = await fetch(url, {
-    cache: "no-store"
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `${response.status} ${response.statusText}`
-    );
-  }
-
-  return response.json();
-}
-
-function createSatelliteObjects() {
-
-  satellites.forEach(s =>
-    scene.remove(s.mesh)
-  );
-
-  satellites = [];
-
-  satelliteData.forEach((data, index) => {
-
-    const isISS = data.type === "ISS";
-
-    const geometry =
-      new THREE.SphereGeometry(
-        isISS ? .13 : .045,
-        10,
-        10
-      );
-
-    const material =
-      new THREE.MeshBasicMaterial({
-        color: isISS
-          ? 0x43f59b
-          : 0x45d7ff
-      });
-
-    const mesh =
-      new THREE.Mesh(
-        geometry,
-        material
-      );
-
-    mesh.userData.index = index;
-
-    scene.add(mesh);
-
-    satellites.push({
-      mesh,
-      data,
-      position: {
-        lat: 0,
-        lon: 0,
-        alt: 0,
-        speed: 0
-      }
-    });
-  });
-}
-
-function calculateSatellitePosition(data) {
-
-  if (
-    !data ||
-    !data.MEAN_MOTION ||
-    !data.INCLINATION
-  ) {
-    return null;
-  }
-
-  /*
-    This simplified propagation gives the UI a
-    continuously changing position based on the
-    current orbital elements.
-
-    For production-grade SGP4 propagation,
-    satellite.js can be plugged in here.
-  */
-
-  const epoch =
-    data.EPOCH
-      ? new Date(data.EPOCH).getTime()
-      : Date.now();
-
-  const now = Date.now();
-
-  const minutes =
-    (now - epoch) / 60000;
-
-  const period =
-    1440 / Number(data.MEAN_MOTION);
-
-  const phase =
-    (minutes / period) *
-    Math.PI *
-    2;
-
-  const inclination =
-    Number(data.INCLINATION) *
-    Math.PI / 180;
-
-  const eccentricity =
-    Number(data.ECCENTRICITY || 0);
-
-  const altitude =
-    Number(data.PERIGEE || 550) +
-    (
-      Number(data.APOGEE || 550) -
-      Number(data.PERIGEE || 550)
-    ) * .5;
-
-  const radius =
-    4 +
-    altitude / 6371 * 4;
-
-  const x =
-    Math.cos(phase) *
-    radius;
-
-  const z =
-    Math.sin(phase) *
-    radius *
-    Math.cos(inclination);
-
-  const y =
-    Math.sin(phase) *
-    radius *
-    Math.sin(inclination);
-
-  const lon =
-    (
-      phase * 180 / Math.PI
-    ) % 360 - 180;
-
-  const lat =
-    Math.sin(phase) *
-    Number(data.INCLINATION);
-
-  const speed =
-    2 *
-    Math.PI *
-    6371 /
-    (period * 60);
-
-  return {
-    x,
-    y,
-    z,
-    lat,
-    lon,
-    alt: altitude,
-    speed
-  };
-}
-
-function updateSatellites() {
-
-  satellites.forEach(sat => {
-
-    const pos =
-      calculateSatellitePosition(
-        sat.data
-      );
-
-    if (!pos) return;
-
-    sat.position = pos;
-
-    sat.mesh.position.set(
-      pos.x,
-      pos.y,
-      pos.z
-    );
-  });
-
-  if (state.iss) {
-
-    const iss =
-      satellites.find(
-        s => s.data.type === "ISS"
-      );
-
-    if (iss) {
-
-      $("issAltitude").textContent =
-        iss.position.alt.toFixed(0);
-
-      $("issSpeed").textContent =
-        iss.position.speed.toFixed(2);
-
-      $("issLat").textContent =
-        iss.position.lat.toFixed(2);
-
-      $("issLon").textContent =
-        iss.position.lon.toFixed(2);
-    }
-  }
-
-  updateSelectedSatellite();
-}
-
-function buildSatelliteList() {
-
-  const container =
-    $("satelliteList");
-
-  container.innerHTML = "";
-
-  satelliteData
-    .slice(0, 160)
-    .forEach((data, index) => {
-
-      const item =
-        document.createElement("div");
-
-      item.className = "sat-item";
-
-      item.dataset.index = index;
-
-      item.innerHTML = `
-        <strong>
-          ${escapeHTML(
-            data.OBJECT_NAME || "UNKNOWN"
-          )}
-        </strong>
-        <span>
-          ${data.type || "SATELLITE"}
-          · NORAD ${data.NORAD_CAT_ID || "—"}
-        </span>
-      `;
-
-      item.addEventListener(
-        "click",
-        () => selectSatellite(index)
-      );
-
-      container.appendChild(item);
-    });
-}
-
-function selectSatellite(index) {
-
-  selectedSatellite =
-    satellites[index];
-
-  if (!selectedSatellite) return;
-
-  const data =
-    selectedSatellite.data;
-
-  $("selectedName").textContent =
-    data.OBJECT_NAME || "UNKNOWN";
-
-  $("selectedType").textContent =
-    data.type || "SATELLITE";
-
-  $("selectedNorad").textContent =
-    data.NORAD_CAT_ID || "—";
-
-  document
-    .querySelectorAll(".sat-item")
-    .forEach(x =>
-      x.classList.remove("selected")
+    renderer.setSize(
+        $("scena3D").clientWidth,
+        $("scena3D").clientHeight
     );
 
-  const selected =
-    document.querySelector(
-      `.sat-item[data-index="${index}"]`
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    $("scena3D").appendChild(renderer.domElement);
+
+
+    // ŚWIATŁO
+
+    const ambient = new THREE.AmbientLight(
+        0x8899bb,
+        0.5
     );
 
-  if (selected)
-    selected.classList.add("selected");
+    scena.add(ambient);
 
-  followTarget = selectedSatellite.mesh;
 
-  toast(
-    `TRACKING ${data.OBJECT_NAME || "OBJECT"}`
-  );
+    // SŁOŃCE
 
-  updateSelectedSatellite();
-}
+    const swiatloSlonca = new THREE.PointLight(
+        0xffffff,
+        7,
+        50
+    );
 
-function updateSelectedSatellite() {
+    swiatloSlonca.position.set(
+        5,
+        3,
+        4
+    );
 
-  if (!selectedSatellite) return;
+    scena.add(swiatloSlonca);
 
-  const p =
-    selectedSatellite.position;
 
-  $("selectedLat").textContent =
-    `${p.lat.toFixed(3)}°`;
+    slonce = stworzSlonce();
 
-  $("selectedLon").textContent =
-    `${p.lon.toFixed(3)}°`;
+    scena.add(slonce);
 
-  $("selectedAlt").textContent =
-    `${p.alt.toFixed(1)} km`;
 
-  $("selectedSpeed").textContent =
-    `${p.speed.toFixed(2)} km/s`;
-}
+    // ZIEMIA
 
-function setupControls() {
+    const geometriaZiemi =
+        new THREE.SphereGeometry(1, 64, 64);
 
-  $("focusISS").addEventListener(
-    "click",
-    () => {
+    const materialZiemi =
+        new THREE.MeshStandardMaterial({
+            color: 0x2477bd,
+            roughness: 0.85,
+            metalness: 0
+        });
 
-      const index =
-        satelliteData.findIndex(
-          x => x.type === "ISS"
+    ziemia = new THREE.Mesh(
+        geometriaZiemi,
+        materialZiemi
+    );
+
+    scena.add(ziemia);
+
+
+    // ATMOSFERA
+
+    const atmosfera =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(1.025, 64, 64),
+            new THREE.MeshBasicMaterial({
+                color: 0x4499ff,
+                transparent: true,
+                opacity: 0.12,
+                side: THREE.BackSide
+            })
         );
 
-      if (index >= 0)
-        selectSatellite(index);
-    }
-  );
+    ziemia.add(atmosfera);
 
-  $("resetCamera").addEventListener(
-    "click",
-    () => {
 
-      camera.position.set(
-        0,
-        1.8,
-        13
-      );
+    // KSIĘŻYC
 
-      followTarget = null;
+    ksiezyc =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.27,
+                32,
+                32
+            ),
+            new THREE.MeshStandardMaterial({
+                color: 0x858585,
+                roughness: 1
+            })
+        );
 
-      toast("CAMERA RESET");
-    }
-  );
-
-  $("trackSelected").addEventListener(
-    "click",
-    () => {
-
-      if (!selectedSatellite) return;
-
-      followTarget =
-        selectedSatellite.mesh;
-
-      toast("OBJECT TRACKING ENABLED");
-    }
-  );
-
-  $("satelliteSearch")
-    .addEventListener(
-      "input",
-      event => {
-
-        const query =
-          event.target.value
-            .toLowerCase();
-
-        document
-          .querySelectorAll(".sat-item")
-          .forEach(item => {
-
-            item.style.display =
-              item.textContent
-                .toLowerCase()
-                .includes(query)
-                  ? ""
-                  : "none";
-          });
-      }
+    ksiezyc.position.set(
+        1.7,
+        0.15,
+        0
     );
-}
 
-function setupNavigation() {
+    scena.add(ksiezyc);
 
-  document
-    .querySelectorAll(".nav")
-    .forEach(button => {
 
-      button.addEventListener(
+    // GWIAZDY
+
+    stworzGwiazdy();
+
+
+    // SATELITY
+
+    grupaSatelitow = new THREE.Group();
+
+    scena.add(grupaSatelitow);
+
+
+    // RAYCASTER
+
+    raycaster = new THREE.Raycaster();
+    mysz = new THREE.Vector2();
+
+
+    window.addEventListener(
+        "resize",
+        dopasujEkran
+    );
+
+
+    renderer.domElement.addEventListener(
+        "pointerdown",
+        rozpocznijObracanie
+    );
+
+    window.addEventListener(
+        "pointermove",
+        przesuwajWidok
+    );
+
+    window.addEventListener(
+        "pointerup",
+        zakonczObracanie
+    );
+
+    renderer.domElement.addEventListener(
+        "wheel",
+        zmienZoom,
+        { passive: true }
+    );
+
+    renderer.domElement.addEventListener(
         "click",
-        () => {
+        klik3D
+    );
 
-          const section =
-            button.dataset.section;
 
-          document
-            .querySelectorAll(".nav")
-            .forEach(x =>
-              x.classList.remove("active")
-            );
-
-          button.classList.add("active");
-
-          document
-            .querySelectorAll(".section")
-            .forEach(x =>
-              x.classList.remove("active")
-            );
-
-          $(
-            section
-          ).classList.add("active");
-        }
-      );
-    });
+    animacja3D();
 }
 
-async function loadMissions() {
 
-  try {
+function stworzSlonce() {
 
-    const data =
-      await fetchJSON(
-        LAUNCH_API
-      );
+    const grupa = new THREE.Group();
 
-    const launches =
-      data.results || [];
+    const kula =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                0.22,
+                32,
+                32
+            ),
+            new THREE.MeshBasicMaterial({
+                color: 0xffd27a
+            })
+        );
 
-    state.lastMissionUpdate =
-      new Date();
+    kula.position.set(
+        4,
+        2,
+        -4
+    );
 
-    const container =
-      $("missionList");
+    grupa.add(kula);
 
-    container.innerHTML = "";
-
-    launches.forEach(launch => {
-
-      const date =
-        launch.net
-          ? new Date(
-              launch.net
-            )
-          : null;
-
-      const article =
-        document.createElement("article");
-
-      article.className = "mission";
-
-      article.innerHTML = `
-        <div class="mission-date">
-          ${
-            date
-              ? date.toISOString()
-                  .slice(0,16)
-                  .replace("T"," ")
-              : "TBD"
-          }
-          UTC
-        </div>
-
-        <div>
-          <h3>
-            ${escapeHTML(
-              launch.name || "Unnamed mission"
-            )}
-          </h3>
-
-          <p>
-            ${
-              escapeHTML(
-                launch.mission?.description ||
-                launch.pad?.location?.name ||
-                "Mission information"
-              )
-            }
-          </p>
-        </div>
-
-        <div class="mission-company">
-          ${
-            escapeHTML(
-              launch.launch_service_provider?.name ||
-              "Unknown provider"
-            )
-          }
-        </div>
-      `;
-
-      container.appendChild(article);
-    });
-
-  } catch (error) {
-
-    console.error(error);
-
-    $("missionList").innerHTML = `
-      <div class="empty">
-        Mission API unavailable.
-      </div>
-    `;
-  }
+    return grupa;
 }
 
-function buildPlanets() {
 
-  const planets = [
-    ["Mercury", "INNER PLANET", "MESSENGER"],
-    ["Venus", "TERRESTRIAL", "VENUS"],
-    ["Earth", "HOME WORLD", "EARTH"],
-    ["Mars", "TERRESTRIAL", "MARS"],
-    ["Jupiter", "GAS GIANT", "JUPITER"],
-    ["Saturn", "GAS GIANT", "SATURN"],
-    ["Uranus", "ICE GIANT", "URANUS"],
-    ["Neptune", "ICE GIANT", "NEPTUNE"]
-  ];
+function stworzGwiazdy() {
 
-  const container =
-    $("planetGrid");
+    const liczba = 6000;
 
-  planets.forEach(
-    ([name, type, code]) => {
+    const geometria =
+        new THREE.BufferGeometry();
 
-      const div =
-        document.createElement("div");
+    const pozycje =
+        new Float32Array(liczba * 3);
 
-      div.className = "planet";
+    for (let i = 0; i < liczba; i++) {
 
-      div.innerHTML = `
-        <div class="orb"></div>
-        <span>${type}</span>
-        <h3>${name}</h3>
-        <span>${code}</span>
-      `;
+        const r =
+            40 + Math.random() * 90;
 
-      container.appendChild(div);
+        const theta =
+            Math.random() * Math.PI * 2;
+
+        const phi =
+            Math.acos(
+                2 * Math.random() - 1
+            );
+
+        pozycje[i * 3] =
+            r * Math.sin(phi) * Math.cos(theta);
+
+        pozycje[i * 3 + 1] =
+            r * Math.sin(phi) * Math.sin(theta);
+
+        pozycje[i * 3 + 2] =
+            r * Math.cos(phi);
     }
-  );
-}
 
-function onPointerDown(event) {
-
-  const rect =
-    $("space").getBoundingClientRect();
-
-  mouse.x =
-    ((event.clientX - rect.left) /
-      rect.width) * 2 - 1;
-
-  mouse.y =
-    -((event.clientY - rect.top) /
-      rect.height) * 2 + 1;
-
-  raycaster.setFromCamera(
-    mouse,
-    camera
-  );
-
-  const hits =
-    raycaster.intersectObjects(
-      satellites.map(s => s.mesh)
+    geometria.setAttribute(
+        "position",
+        new THREE.BufferAttribute(
+            pozycje,
+            3
+        )
     );
 
-  if (!hits.length) return;
+    const material =
+        new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 0.035,
+            transparent: true,
+            opacity: 0.9
+        });
 
-  const index =
-    hits[0].object.userData.index;
-
-  selectSatellite(index);
+    scena.add(
+        new THREE.Points(
+            geometria,
+            material
+        )
+    );
 }
 
-function resize() {
 
-  const canvas = $("space");
+// ============================================================
+// ANIMACJA 3D
+// ============================================================
 
-  camera.aspect =
-    canvas.clientWidth /
-    canvas.clientHeight;
+function animacja3D() {
 
-  camera.updateProjectionMatrix();
+    requestAnimationFrame(animacja3D);
 
-  renderer.setSize(
-    canvas.clientWidth,
-    canvas.clientHeight,
-    false
-  );
+    const teraz = Date.now();
+
+    ziemia.rotation.y += 0.00035;
+
+    ksiezyc.position.x =
+        Math.cos(teraz * 0.00003) * 1.7;
+
+    ksiezyc.position.z =
+        Math.sin(teraz * 0.00003) * 1.7;
+
+    ksiezyc.rotation.y += 0.0005;
+
+    if (grupaSatelitow) {
+        aktualizujPozycjeSatelitow();
+    }
+
+    renderer.render(
+        scena,
+        kamera
+    );
 }
 
-function updateClock() {
 
-  const now =
-    new Date();
+// ============================================================
+// SATELITY
+// ============================================================
 
-  const time =
-    now.toISOString()
-      .slice(11, 19);
+async function pobierzISS() {
 
-  $("utcClock").textContent =
-    time;
+    try {
 
-  $("bigTime").textContent =
-    time;
+        const odpowiedz =
+            await fetch(API.ISS);
 
-  if (state.lastSatelliteUpdate) {
+        if (!odpowiedz.ok) {
+            throw new Error("ISS HTTP");
+        }
 
-    const age =
-      Math.floor(
-        (Date.now() -
-          state.lastSatelliteUpdate.getTime()) /
-        1000
-      );
+        const dane =
+            await odpowiedz.json();
 
-    $("dataAge").textContent =
-      age + "s";
-  }
+        issDane = dane[0];
+
+        $("issStatus").textContent =
+            "AKTYWNA";
+
+        $("statusCelestrak").textContent =
+            "POŁĄCZONO";
+
+        $("issOdnowienie").textContent =
+            "DANE POBRANE";
+
+        aktualizujISS();
+
+    } catch (blad) {
+
+        console.error(blad);
+
+        $("issStatus").textContent =
+            "BŁĄD";
+
+        $("statusCelestrak").textContent =
+            "BŁĄD POŁĄCZENIA";
+    }
 }
 
-function animate() {
 
-  requestAnimationFrame(
-    animate
-  );
+async function pobierzStarlink() {
 
-  const time =
-    performance.now();
+    try {
 
-  earth.rotation.y += .00018;
+        const odpowiedz =
+            await fetch(API.STARLINK);
 
-  sun.rotation.y += .0001;
+        if (!odpowiedz.ok) {
+            throw new Error("Starlink HTTP");
+        }
 
-  updateMoon(time);
+        const dane =
+            await odpowiedz.json();
 
-  updateSatellites();
+        satelity = [
+            ...dane
+        ];
 
-  if (followTarget) {
+        if (issDane) {
+            satelity.unshift(issDane);
+        }
 
-    const target =
-      followTarget.position;
+        $("satelityRazem").textContent =
+            satelity.length;
 
-    const desired =
-      target.clone()
-        .normalize()
-        .multiplyScalar(8);
+        $("starlinkRazem").textContent =
+            dane.length;
 
-    camera.position.lerp(
-      desired,
-      .025
+        $("liczbaSatelitow").textContent =
+            satelity.length;
+
+        $("czasSatelity").textContent =
+            new Date().toLocaleTimeString(
+                "pl-PL",
+                {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+
+        stworzObiektySatelitow();
+
+        wyswietlListeSatelitow();
+
+    } catch (blad) {
+
+        console.error(blad);
+
+        $("satelityRazem").textContent =
+            "BŁĄD";
+
+        $("liczbaSatelitow").textContent =
+            "BŁĄD";
+
+        $("statusCelestrak").textContent =
+            "BŁĄD";
+    }
+}
+
+
+// ============================================================
+// SGP4
+// ============================================================
+
+function obliczPozycjeSatellity(element) {
+
+    try {
+
+        const satrec =
+            satellite.twoline2satrec(
+                element.TLE_LINE1,
+                element.TLE_LINE2
+            );
+
+        const teraz =
+            new Date();
+
+        const pozycja =
+            satellite.propagate(
+                satrec,
+                teraz
+            );
+
+        if (!pozycja.position) {
+            return null;
+        }
+
+        const gmst =
+            satellite.gstime(teraz);
+
+        const geodetyczne =
+            satellite.eciToGeodetic(
+                pozycja.position,
+                gmst
+            );
+
+        const x =
+            geodetyczne.longitude;
+
+        const y =
+            geodetyczne.latitude;
+
+        const wysokosc =
+            geodetyczne.height;
+
+        return {
+            lat:
+                satellite.degreesLat(y),
+
+            lon:
+                satellite.degreesLong(x),
+
+            wysokosc
+        };
+
+    } catch {
+        return null;
+    }
+}
+
+
+// ============================================================
+// ISS TELEMETRIA
+// ============================================================
+
+function aktualizujISS() {
+
+    if (!issDane) return;
+
+    const dane =
+        obliczPozycjeSatellity(
+            issDane
+        );
+
+    if (!dane) return;
+
+    $("issWysokosc").textContent =
+        dane.wysokosc.toFixed(0);
+
+    $("issLat").textContent =
+        dane.lat.toFixed(2);
+
+    $("issLon").textContent =
+        dane.lon.toFixed(2);
+
+
+    // Przybliżona prędkość orbitalna ISS.
+    // Jest to wartość wynikająca z typowej prędkości
+    // orbitalnej, a nie pomiar z czujnika ISS.
+
+    $("issPredkosc").textContent =
+        "7.66";
+
+
+    setTimeout(
+        aktualizujISS,
+        5000
+    );
+}
+
+
+// ============================================================
+// OBIEKTY 3D SATELITÓW
+// ============================================================
+
+function stworzObiektySatelitow() {
+
+    grupaSatelitow.clear();
+
+    const limit =
+        Math.min(
+            satelity.length,
+            500
+        );
+
+    for (let i = 0; i < limit; i++) {
+
+        const sat =
+            satelity[i];
+
+        const obiekt =
+            new THREE.Mesh(
+                new THREE.SphereGeometry(
+                    sat.OBJECT_NAME === "ISS (ZARYA)"
+                        ? 0.035
+                        : 0.012,
+                    8,
+                    8
+                ),
+                new THREE.MeshBasicMaterial({
+                    color:
+                        sat.OBJECT_NAME === "ISS (ZARYA)"
+                            ? 0x45f59b
+                            : 0x63b8ff
+                })
+            );
+
+        obiekt.userData.satelita =
+            sat;
+
+        grupaSatelitow.add(obiekt);
+    }
+}
+
+
+function aktualizujPozycjeSatelitow() {
+
+    if (!grupaSatelitow) return;
+
+    for (
+        let i = 0;
+        i < grupaSatelitow.children.length;
+        i++
+    ) {
+
+        const obiekt =
+            grupaSatelitow.children[i];
+
+        const sat =
+            obiekt.userData.satelita;
+
+        const dane =
+            obliczPozycjeSatellity(
+                sat
+            );
+
+        if (!dane) continue;
+
+
+        // Zamiana szerokości/długości geograficznej
+        // na pozycję na sferze Ziemi.
+
+        const promien =
+            1.06;
+
+        const lat =
+            THREE.MathUtils.degToRad(
+                dane.lat
+            );
+
+        const lon =
+            THREE.MathUtils.degToRad(
+                dane.lon
+            );
+
+        const x =
+            promien *
+            Math.cos(lat) *
+            Math.cos(lon);
+
+        const y =
+            promien *
+            Math.sin(lat);
+
+        const z =
+            -promien *
+            Math.cos(lat) *
+            Math.sin(lon);
+
+        obiekt.position.set(
+            x,
+            y,
+            z
+        );
+    }
+}
+
+
+// ============================================================
+// LISTA SATELITÓW
+// ============================================================
+
+function wyswietlListeSatelitow(
+    filtr = ""
+) {
+
+    const lista =
+        $("listaSatelitow");
+
+    const szukana =
+        filtr.trim().toLowerCase();
+
+
+    const wyniki =
+        satelity
+            .filter(sat =>
+                !szukana ||
+                sat.OBJECT_NAME
+                    .toLowerCase()
+                    .includes(szukana)
+            )
+            .slice(0, 150);
+
+
+    if (!wyniki.length) {
+
+        lista.innerHTML =
+            `<div class="ladowanieLista">
+                Nie znaleziono satelity.
+            </div>`;
+
+        return;
+    }
+
+
+    lista.innerHTML =
+        wyniki.map(
+            (sat, index) => {
+
+                const typ =
+                    sat.OBJECT_NAME.includes(
+                        "STARLINK"
+                    )
+                        ? "STARLINK"
+                        : sat.OBJECT_NAME.includes(
+                            "ISS"
+                        )
+                            ? "STACJA KOSMICZNA"
+                            : "SATELITA";
+
+                return `
+                    <div
+                        class="satelitaItem"
+                        data-index="${satelity.indexOf(sat)}"
+                    >
+                        <strong>
+                            ${uciecHTML(sat.OBJECT_NAME)}
+                        </strong>
+
+                        <span>
+                            ${typ} · NORAD ${sat.NORAD_CAT_ID || "—"}
+                        </span>
+                    </div>
+                `;
+            }
+        ).join("");
+
+
+    lista
+        .querySelectorAll(".satelitaItem")
+        .forEach(element => {
+
+            element.addEventListener(
+                "click",
+                () => {
+
+                    const index =
+                        Number(
+                            element.dataset.index
+                        );
+
+                    pokazSzczegoly(
+                        satelity[index]
+                    );
+
+                }
+            );
+
+        });
+}
+
+
+function pokazSzczegoly(sat) {
+
+    wybranySatelita =
+        sat;
+
+    const dane =
+        obliczPozycjeSatellity(
+            sat
+        );
+
+
+    let typ =
+        "SATELITA";
+
+    if (
+        sat.OBJECT_NAME
+            .toUpperCase()
+            .includes("STARLINK")
+    ) {
+        typ = "STARLINK";
+    }
+
+    if (
+        sat.OBJECT_NAME
+            .toUpperCase()
+            .includes("ISS")
+    ) {
+        typ = "MIĘDZYNARODOWA STACJA KOSMICZNA";
+    }
+
+
+    $("szczegolySatelity").innerHTML = `
+        <div class="daneSatelity">
+
+            <div class="typ">${typ}</div>
+
+            <h3>
+                ${uciecHTML(sat.OBJECT_NAME)}
+            </h3>
+
+            <div class="daneGrid">
+
+                <div class="danePole">
+                    <small>NORAD</small>
+                    <strong>
+                        ${sat.NORAD_CAT_ID || "—"}
+                    </strong>
+                </div>
+
+                <div class="danePole">
+                    <small>KLASYFIKACJA</small>
+                    <strong>
+                        ${sat.CLASSIFICATION || "—"}
+                    </strong>
+                </div>
+
+                <div class="danePole">
+                    <small>POCHODZENIE</small>
+                    <strong>
+                        ${sat.COUNTRY_CODE || "—"}
+                    </strong>
+                </div>
+
+                <div class="danePole">
+                    <small>WYSOKOŚĆ</small>
+                    <strong>
+                        ${
+                            dane
+                                ? dane.wysokosc.toFixed(1) + " km"
+                                : "—"
+                        }
+                    </strong>
+                </div>
+
+                <div class="danePole">
+                    <small>SZEROKOŚĆ</small>
+                    <strong>
+                        ${
+                            dane
+                                ? dane.lat.toFixed(3) + "°"
+                                : "—"
+                        }
+                    </strong>
+                </div>
+
+                <div class="danePole">
+                    <small>DŁUGOŚĆ</small>
+                    <strong>
+                        ${
+                            dane
+                                ? dane.lon.toFixed(3) + "°"
+                                : "—"
+                        }
+                    </strong>
+                </div>
+
+                <div class="danePole">
+                    <small>INCLINACJA</small>
+                    <strong>
+                        ${sat.INCLINATION || "—"}°
+                    </strong>
+                </div>
+
+                <div class="danePole">
+                    <small>OKRES OBIEGU</small>
+                    <strong>
+                        ${
+                            sat.PERIOD
+                                ? sat.PERIOD + " min"
+                                : "—"
+                        }
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+    `;
+}
+
+
+// ============================================================
+// MISJE
+// ============================================================
+
+async function pobierzMisje() {
+
+    try {
+
+        const odpowiedz =
+            await fetch(API.MISJE);
+
+        if (!odpowiedz.ok) {
+            throw new Error("Misje HTTP");
+        }
+
+        const dane =
+            await odpowiedz.json();
+
+        const misje =
+            dane.results || [];
+
+        $("listaMisji").innerHTML =
+            misje.map(
+                misja => {
+
+                    const data =
+                        misja.net
+                            ? new Date(
+                                misja.net
+                            ).toLocaleString(
+                                "pl-PL",
+                                {
+                                    dateStyle: "medium",
+                                    timeStyle: "short"
+                                }
+                            )
+                            : "Data nieznana";
+
+
+                    const firma =
+                        misja.launch_service_provider
+                            ?.name ||
+                        "Nieznany operator";
+
+
+                    return `
+                        <article class="misja">
+
+                            <div class="misjaData">
+                                ${data}
+                            </div>
+
+                            <h3>
+                                ${uciecHTML(
+                                    misja.name ||
+                                    "Nieznana misja"
+                                )}
+                            </h3>
+
+                            <div class="misjaFirma">
+                                ${uciecHTML(firma)}
+                            </div>
+
+                            <p>
+                                ${
+                                    uciecHTML(
+                                        misja.mission?.description ||
+                                        "Brak opisu misji."
+                                    )
+                                }
+                            </p>
+
+                        </article>
+                    `;
+                }
+            ).join("");
+
+
+        $("statusMisji").textContent =
+            "POŁĄCZONO";
+
+    } catch (blad) {
+
+        console.error(blad);
+
+        $("listaMisji").innerHTML =
+            `<div class="ladowanieLista">
+                Nie udało się pobrać aktualnych misji.
+            </div>`;
+
+        $("statusMisji").textContent =
+            "BŁĄD";
+    }
+}
+
+
+// ============================================================
+// NASA APOD
+// ============================================================
+
+async function pobierzNASA() {
+
+    try {
+
+        const odpowiedz =
+            await fetch(API.NASA);
+
+        if (!odpowiedz.ok) {
+            throw new Error("NASA HTTP");
+        }
+
+        const dane =
+            await odpowiedz.json();
+
+
+        if (
+            dane.media_type === "image"
+        ) {
+
+            $("aktualnoscGlowna").innerHTML = `
+                <article class="apod">
+
+                    <img
+                        src="${dane.url}"
+                        alt="Astronomiczne zdjęcie dnia NASA"
+                    >
+
+                    <div class="apodTekst">
+
+                        <small>
+                            NASA · ASTRONOMICZNE ZDJĘCIE DNIA
+                        </small>
+
+                        <h3>
+                            ${uciecHTML(
+                                dane.title ||
+                                "Astronomiczne zdjęcie dnia"
+                            )}
+                        </h3>
+
+                        <p>
+                            ${uciecHTML(
+                                dane.explanation ||
+                                "Brak opisu."
+                            )}
+                        </p>
+
+                        <p>
+                            DATA: ${
+                                dane.date || "—"
+                            }
+                        </p>
+
+                    </div>
+
+                </article>
+            `;
+
+        } else {
+
+            $("aktualnoscGlowna").innerHTML = `
+                <div class="ladowanieLista">
+                    Dzisiejsze dane NASA nie są obrazem.
+                </div>
+            `;
+        }
+
+
+        $("statusNASA").textContent =
+            "POŁĄCZONO";
+
+    } catch (blad) {
+
+        console.error(blad);
+
+        $("aktualnoscGlowna").innerHTML =
+            `<div class="ladowanieLista">
+                Nie udało się pobrać danych NASA.
+            </div>`;
+
+        $("statusNASA").textContent =
+            "BŁĄD";
+    }
+}
+
+
+// ============================================================
+// PLANETY
+// ============================================================
+
+function inicjalizujPlanety() {
+
+    const planety = [
+        ["Merkury", "Najbliższa Słońcu planeta."],
+        ["Wenus", "Gorąca planeta o bardzo gęstej atmosferze."],
+        ["Ziemia", "Nasza planeta i miejsce działania ISS."],
+        ["Mars", "Czerwona planeta."],
+        ["Jowisz", "Największa planeta Układu Słonecznego."],
+        ["Saturn", "Gazowy olbrzym z charakterystycznymi pierścieniami."],
+        ["Uran", "Lodowy olbrzym obracający się pod dużym kątem."],
+        ["Neptun", "Najdalsza planeta Układu Słonecznego."]
+    ];
+
+
+    $("planetyGrid").innerHTML =
+        planety.map(
+            planeta => `
+                <article class="planetaKarta">
+
+                    <div class="planetaKula"></div>
+
+                    <h3>
+                        ${planeta[0]}
+                    </h3>
+
+                    <p>
+                        ${planeta[1]}
+                    </p>
+
+                </article>
+            `
+        ).join("");
+}
+
+
+// ============================================================
+// MENU
+// ============================================================
+
+function inicjalizujMenu() {
+
+    document
+        .querySelectorAll(".menuPrzycisk")
+        .forEach(przycisk => {
+
+            przycisk.addEventListener(
+                "click",
+                () => {
+
+                    const strona =
+                        przycisk.dataset.strona;
+
+                    document
+                        .querySelectorAll(
+                            ".menuPrzycisk"
+                        )
+                        .forEach(x =>
+                            x.classList.remove(
+                                "aktywny"
+                            )
+                        );
+
+                    przycisk.classList.add(
+                        "aktywny"
+                    );
+
+
+                    document
+                        .querySelectorAll(
+                            ".strona"
+                        )
+                        .forEach(x =>
+                            x.classList.remove(
+                                "aktywna"
+                            )
+                        );
+
+
+                    const cel =
+                        $(
+                            `strona${
+                                strona
+                                    .charAt(0)
+                                    .toUpperCase()
+                                +
+                                strona.slice(1)
+                            }`
+                        );
+
+                    if (cel) {
+                        cel.classList.add(
+                            "aktywna"
+                        );
+                    }
+
+                }
+            );
+
+        });
+}
+
+
+// ============================================================
+// INTERAKCJE
+// ============================================================
+
+function inicjalizujInterakcje() {
+
+    $("szukajSatelity")
+        .addEventListener(
+            "input",
+            e => {
+                wyswietlListeSatelitow(
+                    e.target.value
+                );
+            }
+        );
+
+
+    document.addEventListener(
+        "keydown",
+        e => {
+
+            if (e.key === "Escape") {
+
+                wybranySatelita =
+                    null;
+
+            }
+
+        }
+    );
+}
+
+
+function rozpocznijObracanie(e) {
+
+    obracanie = true;
+
+    ostatniaPozycja = {
+        x: e.clientX,
+        y: e.clientY
+    };
+}
+
+
+function przesuwajWidok(e) {
+
+    if (!obracanie) return;
+
+    const dx =
+        e.clientX -
+        ostatniaPozycja.x;
+
+    const dy =
+        e.clientY -
+        ostatniaPozycja.y;
+
+    ziemia.rotation.y +=
+        dx * 0.005;
+
+    ziemia.rotation.x +=
+        dy * 0.003;
+
+    ostatniaPozycja = {
+        x: e.clientX,
+        y: e.clientY
+    };
+}
+
+
+function zakonczObracanie() {
+
+    obracanie = false;
+}
+
+
+function zmienZoom(e) {
+
+    odlegloscKamery +=
+        e.deltaY * 0.0015;
+
+    odlegloscKamery =
+        THREE.MathUtils.clamp(
+            odlegloscKamery,
+            1.8,
+            8
+        );
+
+    kamera.position.z =
+        odlegloscKamery;
+}
+
+
+function klik3D(e) {
+
+    const prostokat =
+        renderer.domElement
+            .getBoundingClientRect();
+
+    mysz.x =
+        ((e.clientX - prostokat.left)
+            / prostokat.width) * 2 - 1;
+
+    mysz.y =
+        -((e.clientY - prostokat.top)
+            / prostokat.height) * 2 + 1;
+
+
+    raycaster.setFromCamera(
+        mysz,
+        kamera
     );
 
-    camera.lookAt(
-      controlsTarget
-    );
-  } else {
 
-    camera.lookAt(
-      controlsTarget
-    );
-  }
+    const trafienia =
+        raycaster.intersectObjects(
+            grupaSatelitow.children
+        );
 
-  renderer.render(
-    scene,
-    camera
-  );
+
+    if (!trafienia.length) {
+        return;
+    }
+
+
+    const sat =
+        trafienia[0]
+            .object
+            .userData
+            .satelita;
+
+
+    pokazPowiadomienie(
+        `Wybrano: ${sat.OBJECT_NAME}`
+    );
+
+    pokazSzczegoly(
+        sat
+    );
 }
 
-function escapeHTML(value) {
 
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+// ============================================================
+// ZEGAR
+// ============================================================
+
+function aktualizujZegar() {
+
+    const teraz =
+        new Date();
+
+    $("zegar").textContent =
+        teraz.toISOString()
+            .substring(11, 19);
 }
 
-buildPlanets();
-init();
+setInterval(
+    aktualizujZegar,
+    1000
+);
+
+aktualizujZegar();
+
+
+// ============================================================
+// SYSTEM
+// ============================================================
+
+function aktualizujSystem() {
+
+    $("statusThree").textContent =
+        "AKTYWNY";
+}
+
+
+// ============================================================
+// RESPONSYWNOŚĆ
+// ============================================================
+
+function dopasujEkran() {
+
+    const kontener =
+        $("scena3D");
+
+    if (!kontener || !renderer) return;
+
+    kamera.aspect =
+        kontener.clientWidth /
+        kontener.clientHeight;
+
+    kamera.updateProjectionMatrix();
+
+    renderer.setSize(
+        kontener.clientWidth,
+        kontener.clientHeight
+    );
+}
+
+
+// ============================================================
+// NARZĘDZIA
+// ============================================================
+
+function sleep(ms) {
+
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
+    );
+}
+
+
+function pokazPowiadomienie(tekst) {
+
+    const element =
+        $("powiadomienie");
+
+    element.textContent =
+        tekst;
+
+    element.classList.add(
+        "pokaz"
+    );
+
+    clearTimeout(
+        pokazPowiadomienie.timer
+    );
+
+    pokazPowiadomienie.timer =
+        setTimeout(
+            () => {
+                element.classList.remove(
+                    "pokaz"
+                );
+            },
+            2500
+        );
+}
+
+
+function uciecHTML(tekst) {
+
+    if (tekst === undefined ||
+        tekst === null) {
+        return "";
+    }
+
+    return String(tekst)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+// ============================================================
+// AUTOMATYCZNE ODŚWIEŻANIE DANYCH
+// ============================================================
+
+setInterval(
+    async () => {
+
+        await pobierzISS();
+
+    },
+    60 * 1000
+);
+
+
+setInterval(
+    async () => {
+
+        await pobierzStarlink();
+
+    },
+    30 * 60 * 1000
+);
+
+
+setInterval(
+    async () => {
+
+        await pobierzMisje();
+
+    },
+    15 * 60 * 1000
+);
+
+
+setInterval(
+    async () => {
+
+        await pobierzNASA();
+
+    },
+    60 * 60 * 1000
+);
