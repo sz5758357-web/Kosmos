@@ -1,36 +1,60 @@
-const canvas = document.getElementById("space");
+/* =====================================================
+   COSMOS 1.0
+   SPACE OPERATIONS CENTER
+===================================================== */
 
-const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0x010208);
+/* =========================
+   BASIC SETUP
+========================= */
+
+const canvas =
+    document.getElementById("space");
+
+const scene =
+    new THREE.Scene();
+
+scene.background =
+    new THREE.Color(0x010208);
 
 
 /* =========================
    CAMERA
 ========================= */
 
-const camera = new THREE.PerspectiveCamera(
-    55,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    2000
-);
+const camera =
+    new THREE.PerspectiveCamera(
+        50,
+        window.innerWidth /
+        window.innerHeight,
+        0.1,
+        3000
+    );
 
-camera.position.set(0, 35, 100);
+camera.position.set(
+    0,
+    35,
+    110
+);
 
 
 /* =========================
    RENDERER
 ========================= */
 
-const renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-    antialias: false,
-    powerPreference: "high-performance"
-});
+const renderer =
+    new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: false,
+        powerPreference:
+            "high-performance"
+    });
 
 renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio, 1.5)
+    Math.min(
+        window.devicePixelRatio,
+        1.5
+    )
 );
 
 renderer.setSize(
@@ -46,41 +70,118 @@ renderer.setSize(
 scene.add(
     new THREE.AmbientLight(
         0xffffff,
-        0.2
+        0.08
     )
 );
 
 const sunLight =
     new THREE.PointLight(
         0xffffff,
-        4,
-        500
+        3.5,
+        1000
     );
 
-scene.add(sunLight);
+scene.add(
+    sunLight
+);
+
+
+/* =========================
+   LOADING
+========================= */
+
+const loading =
+    document.getElementById(
+        "loading"
+    );
+
+const loadingProgress =
+    document.getElementById(
+        "loadingProgress"
+    );
+
+const loadingText =
+    document.getElementById(
+        "loadingText"
+    );
+
+const app =
+    document.getElementById(
+        "app"
+    );
+
+
+let loadPercent = 0;
+
+
+function loadingStep(
+    text,
+    percent
+) {
+
+    loadingText.textContent =
+        text;
+
+    loadingProgress.style.width =
+        percent + "%";
+}
 
 
 /* =========================
    STARS
 ========================= */
 
+loadingStep(
+    "BUILDING STAR FIELD...",
+    15
+);
+
 const starGeometry =
     new THREE.BufferGeometry();
 
-const starPositions =
-    [];
+const starPositions = [];
 
-for (let i = 0; i < 3500; i++) {
+const STAR_COUNT = 5000;
+
+for (
+    let i = 0;
+    i < STAR_COUNT;
+    i++
+) {
+
+    const radius =
+        500 +
+        Math.random() * 1000;
+
+    const theta =
+        Math.random() *
+        Math.PI *
+        2;
+
+    const phi =
+        Math.acos(
+            2 *
+            Math.random() -
+            1
+        );
 
     starPositions.push(
-        (Math.random() - 0.5) * 1500,
-        (Math.random() - 0.5) * 1500,
-        (Math.random() - 0.5) * 1500
+        radius *
+        Math.sin(phi) *
+        Math.cos(theta),
+
+        radius *
+        Math.cos(phi),
+
+        radius *
+        Math.sin(phi) *
+        Math.sin(theta)
     );
 }
 
 starGeometry.setAttribute(
     "position",
+
     new THREE.Float32BufferAttribute(
         starPositions,
         3
@@ -90,7 +191,9 @@ starGeometry.setAttribute(
 const starMaterial =
     new THREE.PointsMaterial({
         color: 0xffffff,
-        size: 1
+        size: 1.1,
+        transparent: true,
+        opacity: .85
     });
 
 const stars =
@@ -103,69 +206,212 @@ scene.add(stars);
 
 
 /* =========================
+   TEXTURE LOADER
+========================= */
+
+const textureLoader =
+    new THREE.TextureLoader();
+
+
+const TEXTURES =
+    "https://threejs.org/examples/textures/planets/";
+
+
+function texture(
+    filename
+) {
+
+    return textureLoader.load(
+        TEXTURES + filename
+    );
+}
+
+
+/* =========================
    SUN
 ========================= */
+
+loadingStep(
+    "INITIALIZING STAR...",
+    25
+);
 
 const sun =
     new THREE.Mesh(
         new THREE.SphereGeometry(
-            10,
-            24,
-            24
+            9,
+            32,
+            32
         ),
         new THREE.MeshBasicMaterial({
-            color: 0xffa52b
+            map: texture(
+                "sun.jpg"
+            )
         })
     );
 
 scene.add(sun);
 
 
+/* SUN GLOW */
+
+const sunGlow =
+    new THREE.Mesh(
+        new THREE.SphereGeometry(
+            11,
+            24,
+            24
+        ),
+        new THREE.MeshBasicMaterial({
+            color: 0xff9b22,
+            transparent: true,
+            opacity: .12,
+            side:
+                THREE.BackSide
+        })
+    );
+
+scene.add(sunGlow);
+
+
 /* =========================
-   PLANETS
+   PLANET CONFIG
 ========================= */
 
-const planets = [];
+const planetsData = [
 
-const planetData = [
-    ["Merkury", 1.4, 18, 0x99918b, 0.018],
-    ["Wenus", 2.2, 28, 0xd89b5c, 0.014],
-    ["Ziemia", 2.6, 40, 0x2878d8, 0.010],
-    ["Mars", 2, 53, 0xb84d32, 0.008],
-    ["Jowisz", 6.5, 78, 0xc99b70, 0.004],
-    ["Saturn", 5.7, 110, 0xd4b98d, 0.003],
-    ["Uran", 3.8, 140, 0x76cbd1, 0.002],
-    ["Neptun", 3.7, 170, 0x315fd3, 0.0015]
+    {
+        name: "Mercury",
+        radius: 1.4,
+        distance: 18,
+        speed: .018,
+        texture: "mercury_1k.jpg",
+        type: "TERRESTRIAL",
+        velocity: "47.4 km/s"
+    },
+
+    {
+        name: "Venus",
+        radius: 2.2,
+        distance: 28,
+        speed: .014,
+        texture: "venus_surface_1k.jpg",
+        type: "TERRESTRIAL",
+        velocity: "35.0 km/s"
+    },
+
+    {
+        name: "Earth",
+        radius: 2.7,
+        distance: 40,
+        speed: .010,
+        texture: "earth_atmos_2048.jpg",
+        type: "TERRESTRIAL",
+        velocity: "29.8 km/s"
+    },
+
+    {
+        name: "Mars",
+        radius: 2,
+        distance: 53,
+        speed: .008,
+        texture: "mars_1k_color.jpg",
+        type: "TERRESTRIAL",
+        velocity: "24.1 km/s"
+    },
+
+    {
+        name: "Jupiter",
+        radius: 6.5,
+        distance: 78,
+        speed: .004,
+        texture: "jupiter_1k.jpg",
+        type: "GAS GIANT",
+        velocity: "13.1 km/s"
+    },
+
+    {
+        name: "Saturn",
+        radius: 5.7,
+        distance: 110,
+        speed: .003,
+        texture: "saturn_1k.jpg",
+        type: "GAS GIANT",
+        velocity: "9.7 km/s"
+    },
+
+    {
+        name: "Uranus",
+        radius: 3.8,
+        distance: 140,
+        speed: .002,
+        texture: "uranus_1k.jpg",
+        type: "ICE GIANT",
+        velocity: "6.8 km/s"
+    },
+
+    {
+        name: "Neptune",
+        radius: 3.7,
+        distance: 170,
+        speed: .0015,
+        texture: "neptune_1k.jpg",
+        type: "ICE GIANT",
+        velocity: "5.4 km/s"
+    }
+
 ];
 
 
-function createOrbit(radius) {
+const planets = [];
+
+
+/* =========================
+   ORBIT
+========================= */
+
+function createOrbit(
+    radius
+) {
 
     const points = [];
 
-    for (let i = 0; i <= 100; i++) {
+    for (
+        let i = 0;
+        i <= 160;
+        i++
+    ) {
 
-        const a =
-            i / 100 * Math.PI * 2;
+        const angle =
+            i /
+            160 *
+            Math.PI *
+            2;
 
         points.push(
             new THREE.Vector3(
-                Math.cos(a) * radius,
+                Math.cos(angle) *
+                radius,
+
                 0,
-                Math.sin(a) * radius
+
+                Math.sin(angle) *
+                radius
             )
         );
     }
 
     const geometry =
         new THREE.BufferGeometry()
-            .setFromPoints(points);
+            .setFromPoints(
+                points
+            );
 
     const material =
         new THREE.LineBasicMaterial({
-            color: 0x34384a,
+            color: 0x34405a,
             transparent: true,
-            opacity: 0.35
+            opacity: .28
         });
 
     const orbit =
@@ -178,84 +424,576 @@ function createOrbit(radius) {
 }
 
 
-planetData.forEach(
-    (data, index) => {
+/* =========================
+   PLANETS
+========================= */
 
-        const name = data[0];
-        const radius = data[1];
-        const distance = data[2];
-        const color = data[3];
-        const speed = data[4];
+loadingStep(
+    "LOADING PLANETARY SYSTEM...",
+    40
+);
 
-        createOrbit(distance);
+
+planetsData.forEach(
+    data => {
+
+        createOrbit(
+            data.distance
+        );
+
+
+        const material =
+            new THREE.MeshStandardMaterial({
+                map: texture(
+                    data.texture
+                ),
+
+                roughness: .9
+            });
+
 
         const planet =
             new THREE.Mesh(
                 new THREE.SphereGeometry(
-                    radius,
-                    20,
-                    20
+                    data.radius,
+                    32,
+                    32
                 ),
-                new THREE.MeshStandardMaterial({
-                    color: color,
-                    roughness: 0.9
-                })
+
+                material
             );
 
+
         planet.userData = {
-            name: name,
-            distance: distance,
-            speed: speed
+            ...data,
+            objectType: "planet"
         };
 
-        planet.position.x =
-            distance;
 
-        scene.add(planet);
+        planet.position.x =
+            data.distance;
+
+
+        scene.add(
+            planet
+        );
+
 
         planets.push({
             mesh: planet,
-            angle: Math.random() * 6.28
+            angle:
+                Math.random() *
+                Math.PI *
+                2
         });
 
 
-        if (name === "Saturn") {
+        /* SATURN */
+
+        if (
+            data.name ===
+            "Saturn"
+        ) {
 
             const ring =
                 new THREE.Mesh(
                     new THREE.RingGeometry(
-                        radius * 1.35,
-                        radius * 2,
-                        40
+                        data.radius *
+                        1.35,
+
+                        data.radius *
+                        2,
+
+                        64
                     ),
+
                     new THREE.MeshBasicMaterial({
-                        color: 0xc5b08e,
-                        side: THREE.DoubleSide,
-                        transparent: true,
-                        opacity: 0.6
+                        color:
+                            0xb9a788,
+
+                        side:
+                            THREE.DoubleSide,
+
+                        transparent:
+                            true,
+
+                        opacity:
+                            .65
                     })
                 );
 
             ring.rotation.x =
                 Math.PI / 2;
 
-            planet.add(ring);
+            planet.add(
+                ring
+            );
         }
     }
 );
 
 
 /* =========================
-   MOUSE / TOUCH ROTATION
+   EARTH ATMOSPHERE
 ========================= */
 
-let dragging = false;
+const earth =
+    planets.find(
+        p =>
+            p.mesh.userData.name ===
+            "Earth"
+    );
 
-let lastX = 0;
-let lastY = 0;
 
-let rotationX = 0;
-let rotationY = 0;
+if (earth) {
+
+    const atmosphere =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                2.85,
+                32,
+                32
+            ),
+
+            new THREE.MeshBasicMaterial({
+                color:
+                    0x4fa8ff,
+
+                transparent:
+                    true,
+
+                opacity:
+                    .09,
+
+                side:
+                    THREE.BackSide
+            })
+        );
+
+    earth.mesh.add(
+        atmosphere
+    );
+}
+
+
+/* =========================
+   MOON
+========================= */
+
+loadingStep(
+    "CALCULATING LUNAR ORBIT...",
+    55
+);
+
+
+let moonOrbit;
+
+if (earth) {
+
+    moonOrbit =
+        new THREE.Object3D();
+
+    scene.add(
+        moonOrbit
+    );
+
+
+    const moon =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                .75,
+                24,
+                24
+            ),
+
+            new THREE.MeshStandardMaterial({
+                map:
+                    texture(
+                        "moon_1024.jpg"
+                    ),
+
+                roughness:
+                    1
+            })
+        );
+
+
+    moon.position.x =
+        6;
+
+
+    moon.userData = {
+        name: "Moon",
+        objectType: "moon",
+        type: "NATURAL SATELLITE",
+        velocity: "1.02 km/s"
+    };
+
+
+    moonOrbit.add(
+        moon
+    );
+}
+
+
+/* =========================
+   STARLINK
+========================= */
+
+loadingStep(
+    "DEPLOYING SATELLITE NETWORK...",
+    65
+);
+
+
+const starlinks = [];
+
+const starlinkGroup =
+    new THREE.Group();
+
+scene.add(
+    starlinkGroup
+);
+
+
+function createStarlink(
+    index
+) {
+
+    const satellite =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .25,
+                .08,
+                .08
+            ),
+
+            new THREE.MeshBasicMaterial({
+                color:
+                    0xdde8ff
+            })
+        );
+
+
+    satellite.userData = {
+
+        name:
+            "STARLINK-" +
+            String(
+                index + 1
+            ).padStart(
+                4,
+                "0"
+            ),
+
+        objectType:
+            "starlink",
+
+        type:
+            "COMMUNICATION SATELLITE",
+
+        velocity:
+            "≈ 7.6 km/s",
+
+        distance:
+            "≈ 550 km"
+
+    };
+
+
+    satellite.userData.orbit =
+        2.9 +
+        Math.random() *
+        .5;
+
+    satellite.userData.angle =
+        Math.random() *
+        Math.PI *
+        2;
+
+    satellite.userData.inclination =
+        (Math.random() -
+        .5) *
+        .9;
+
+
+    starlinkGroup.add(
+        satellite
+    );
+
+    starlinks.push(
+        satellite
+    );
+}
+
+
+for (
+    let i = 0;
+    i < 70;
+    i++
+) {
+
+    createStarlink(i);
+}
+
+
+/* =========================
+   POINTER
+========================= */
+
+const pointer =
+    new THREE.Vector2();
+
+const raycaster =
+    new THREE.Raycaster();
+
+
+function getPointer(
+    event
+) {
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    pointer.x =
+        (
+            event.clientX -
+            rect.left
+        ) /
+        rect.width *
+        2 -
+        1;
+
+    pointer.y =
+        -(
+            (
+                event.clientY -
+                rect.top
+            ) /
+            rect.height
+        ) *
+        2 +
+        1;
+}
+
+
+/* =========================
+   INFO
+========================= */
+
+let selectedObject =
+    earth ?
+    earth.mesh :
+    null;
+
+
+function showObject(
+    object
+) {
+
+    selectedObject =
+        object;
+
+
+    const data =
+        object.userData;
+
+
+    document.getElementById(
+        "infoName"
+    ).textContent =
+        data.name
+            .toUpperCase();
+
+
+    document.getElementById(
+        "objectTitle"
+    ).textContent =
+        data.name
+            .toUpperCase();
+
+
+    document.getElementById(
+        "infoType"
+    ).textContent =
+        data.type ||
+        "OBJECT";
+
+
+    document.getElementById(
+        "infoVelocity"
+    ).textContent =
+        data.velocity ||
+        "—";
+
+
+    document.getElementById(
+        "infoDistance"
+    ).textContent =
+        data.distance ||
+        "—";
+
+
+    document.getElementById(
+        "infoStatus"
+    ).textContent =
+        data.objectType ===
+        "starlink"
+            ? "ORBITING"
+            : "ACTIVE";
+
+
+    document.getElementById(
+        "infoDescription"
+    ).textContent =
+        getDescription(
+            data
+        );
+
+
+    document.getElementById(
+        "objectDescription"
+    ).textContent =
+        getDescription(
+            data
+        );
+
+
+    document.getElementById(
+        "infoCard"
+    ).classList.add(
+        "visible"
+    );
+}
+
+
+function getDescription(
+    data
+) {
+
+    if (
+        data.objectType ===
+        "starlink"
+    ) {
+
+        return (
+            "Satelita komunikacyjny " +
+            "poruszający się po orbicie " +
+            "okołoziemskiej. Wersja " +
+            "COSMOS wykorzystuje tutaj " +
+            "symulowany ruch konstelacji."
+        );
+    }
+
+
+    if (
+        data.name ===
+        "Earth"
+    ) {
+
+        return (
+            "Ziemia — trzecia planeta " +
+            "od Słońca. Jedyny znany " +
+            "świat posiadający życie."
+        );
+    }
+
+
+    if (
+        data.name ===
+        "Moon"
+    ) {
+
+        return (
+            "Naturalny satelita Ziemi " +
+            "okrążający ją w czasie około " +
+            "27,3 dnia."
+        );
+    }
+
+
+    return (
+        data.name +
+        " — obiekt Układu " +
+        "Słonecznego obserwowany " +
+        "przez centrum COSMOS."
+    );
+}
+
+
+/* =========================
+   CLICK
+========================= */
+
+canvas.addEventListener(
+    "pointerdown",
+    event => {
+
+        getPointer(
+            event
+        );
+
+        raycaster.setFromCamera(
+            pointer,
+            camera
+        );
+
+
+        const objects = [
+            ...planets.map(
+                p =>
+                    p.mesh
+            ),
+
+            ...starlinks
+        ];
+
+
+        const hits =
+            raycaster.intersectObjects(
+                objects
+            );
+
+
+        if (
+            hits.length
+        ) {
+
+            showObject(
+                hits[0].object
+            );
+
+            focusTarget(
+                hits[0].object
+            );
+        }
+    }
+);
+
+
+/* =========================
+   CAMERA CONTROL
+========================= */
+
+let dragging =
+    false;
+
+let previousX =
+    0;
+
+let previousY =
+    0;
+
+let cameraAngle =
+    0;
+
+let cameraHeight =
+    35;
+
+let cameraDistance =
+    110;
+
 
 canvas.addEventListener(
     "pointerdown",
@@ -263,17 +1001,23 @@ canvas.addEventListener(
 
         dragging = true;
 
-        lastX = event.clientX;
-        lastY = event.clientY;
+        previousX =
+            event.clientX;
+
+        previousY =
+            event.clientY;
     }
 );
 
-canvas.addEventListener(
+
+window.addEventListener(
     "pointerup",
     () => {
+
         dragging = false;
     }
 );
+
 
 canvas.addEventListener(
     "pointermove",
@@ -282,26 +1026,39 @@ canvas.addEventListener(
         if (!dragging)
             return;
 
+
         const dx =
-            event.clientX - lastX;
+            event.clientX -
+            previousX;
 
         const dy =
-            event.clientY - lastY;
+            event.clientY -
+            previousY;
 
-        rotationY += dx * 0.004;
-        rotationX += dy * 0.004;
 
-        rotationX =
+        cameraAngle +=
+            dx * .004;
+
+
+        cameraHeight -=
+            dy * .2;
+
+
+        cameraHeight =
             Math.max(
-                -1.2,
+                5,
                 Math.min(
-                    1.2,
-                    rotationX
+                    150,
+                    cameraHeight
                 )
             );
 
-        lastX = event.clientX;
-        lastY = event.clientY;
+
+        previousX =
+            event.clientX;
+
+        previousY =
+            event.clientY;
     }
 );
 
@@ -314,157 +1071,661 @@ canvas.addEventListener(
     "wheel",
     event => {
 
-        camera.position.z +=
-            event.deltaY * 0.05;
+        cameraDistance +=
+            event.deltaY *
+            .08;
 
-        camera.position.z =
+
+        cameraDistance =
             Math.max(
-                20,
+                15,
                 Math.min(
-                    400,
-                    camera.position.z
+                    500,
+                    cameraDistance
                 )
             );
     },
-    { passive: true }
-);
-
-
-/* =========================
-   CLICK PLANET
-========================= */
-
-const raycaster =
-    new THREE.Raycaster();
-
-const pointer =
-    new THREE.Vector2();
-
-
-canvas.addEventListener(
-    "click",
-    event => {
-
-        const rect =
-            canvas.getBoundingClientRect();
-
-        pointer.x =
-            ((event.clientX - rect.left)
-            / rect.width) * 2 - 1;
-
-        pointer.y =
-            -((event.clientY - rect.top)
-            / rect.height) * 2 + 1;
-
-        raycaster.setFromCamera(
-            pointer,
-            camera
-        );
-
-        const hits =
-            raycaster.intersectObjects(
-                planets.map(
-                    p => p.mesh
-                )
-            );
-
-        if (!hits.length)
-            return;
-
-        const planet =
-            hits[0].object;
-
-        openPlanet(planet);
+    {
+        passive: true
     }
 );
-
-
-/* =========================
-   PLANET INFO
-========================= */
-
-const card =
-    document.getElementById(
-        "planetCard"
-    );
-
-let selectedPlanet = null;
-
-
-function openPlanet(planet) {
-
-    selectedPlanet = planet;
-
-    document.getElementById(
-        "cardName"
-    ).textContent =
-        planet.userData.name
-            .toUpperCase();
-
-    document.getElementById(
-        "planetName"
-    ).textContent =
-        planet.userData.name
-            .toUpperCase();
-
-    document.getElementById(
-        "cardDescription"
-    ).textContent =
-        "Obiekt Układu Słonecznego znajdujący się w odległości około "
-        +
-        planet.userData.distance
-        +
-        " jednostek od Słońca.";
-
-    document.getElementById(
-        "diameter"
-    ).textContent =
-        "—";
-
-    document.getElementById(
-        "year"
-    ).textContent =
-        "—";
-
-    card.classList.add(
-        "active"
-    );
-}
-
-
-/* =========================
-   CLOSE
-========================= */
-
-document
-    .getElementById("close")
-    .onclick = () => {
-
-        card.classList.remove(
-            "active"
-        );
-
-        selectedPlanet = null;
-    };
 
 
 /* =========================
    FOCUS
 ========================= */
 
-document
-    .getElementById("focus")
-    .onclick = () => {
+function focusTarget(
+    object
+) {
 
-        if (!selectedPlanet)
-            return;
+    if (!object)
+        return;
 
-        camera.position.set(
-            selectedPlanet.position.x,
-            10,
-            selectedPlanet.position.z + 25
+
+    const distance =
+        object.userData.objectType ===
+        "planet"
+            ? object.userData.radius
+                ? object.userData.radius *
+                  7
+                : 15
+
+            : 15;
+
+
+    cameraDistance =
+        Math.max(
+            15,
+            distance
         );
-    };
+}
+
+
+document.getElementById(
+    "focusObject"
+).onclick = () => {
+
+    if (
+        selectedObject
+    ) {
+
+        focusTarget(
+            selectedObject
+        );
+    }
+};
+
+
+document.getElementById(
+    "infoFocus"
+).onclick = () => {
+
+    if (
+        selectedObject
+    ) {
+
+        focusTarget(
+            selectedObject
+        );
+    }
+};
+
+
+document.getElementById(
+    "resetView"
+).onclick = () => {
+
+    cameraAngle = 0;
+
+    cameraHeight = 35;
+
+    cameraDistance = 110;
+
+    selectedObject = null;
+};
+
+
+/* =========================
+   INFO CLOSE
+========================= */
+
+document.getElementById(
+    "closeInfo"
+).onclick = () => {
+
+    document.getElementById(
+        "infoCard"
+    ).classList.remove(
+        "visible"
+    );
+};
+
+
+/* =========================
+   MENU
+========================= */
+
+const sidebar =
+    document.getElementById(
+        "sidebar"
+    );
+
+
+document.getElementById(
+    "menuButton"
+).onclick = () => {
+
+    sidebar.classList.toggle(
+        "open"
+    );
+};
+
+
+/* =========================
+   MODALS
+========================= */
+
+const modal =
+    document.getElementById(
+        "sectionModal"
+    );
+
+const modalContent =
+    document.getElementById(
+        "modalContent"
+    );
+
+
+document.getElementById(
+    "closeModal"
+).onclick = () => {
+
+    modal.classList.remove(
+        "active"
+    );
+};
+
+
+function openSection(
+    section
+) {
+
+    let html = "";
+
+
+    if (
+        section ===
+        "planets"
+    ) {
+
+        html = `
+            <h2>PLANETARY SYSTEM</h2>
+
+            <p>
+                Aktualnie obserwowane obiekty
+                Układu Słonecznego.
+            </p>
+
+            ${planetsData.map(
+                planet => `
+                    <div class="list-card">
+                        <strong>
+                            ${planet.name}
+                        </strong>
+
+                        <small>
+                            ${planet.type}
+                            ·
+                            ${planet.velocity}
+                        </small>
+                    </div>
+                `
+            ).join("")}
+        `;
+    }
+
+
+    if (
+        section ===
+        "missions"
+    ) {
+
+        html = `
+            <h2>SPACE MISSIONS</h2>
+
+            <div class="list-card">
+                <strong>ARTEMIS</strong>
+                <small>
+                    Program powrotu ludzi
+                    na Księżyc.
+                </small>
+            </div>
+
+            <div class="list-card">
+                <strong>JUNO</strong>
+                <small>
+                    Badanie Jowisza.
+                </small>
+            </div>
+
+            <div class="list-card">
+                <strong>JUICE</strong>
+                <small>
+                    Misja ESA badająca
+                    układ Jowisza.
+                </small>
+            </div>
+
+            <div class="list-card">
+                <strong>EUCLID</strong>
+                <small>
+                    Obserwacje struktury
+                    Wszechświata.
+                </small>
+            </div>
+        `;
+    }
+
+
+    if (
+        section ===
+        "starlink"
+    ) {
+
+        html = `
+            <h2>STARLINK</h2>
+
+            <p>
+                Konstelacja satelitów
+                została tutaj przedstawiona
+                jako symulacja orbitalna.
+            </p>
+
+            <div class="list-card">
+                <strong>
+                    ${starlinks.length}
+                    SATELLITES
+                </strong>
+
+                <small>
+                    SIMULATED ORBIT
+                </small>
+            </div>
+
+            <div class="list-card">
+                <strong>
+                    ORBIT ALTITUDE
+                </strong>
+
+                <small>
+                    ~550 km
+                </small>
+            </div>
+        `;
+    }
+
+
+    if (
+        section ===
+        "stars"
+    ) {
+
+        html = `
+            <h2>DEEP SPACE</h2>
+
+            <p>
+                Pole gwiazd COSMOS zawiera
+                tysiące proceduralnie rozmieszczonych
+                punktów świetlnych.
+            </p>
+
+            <div class="list-card">
+                <strong>
+                    MILKY WAY
+                </strong>
+
+                <small>
+                    GALAXY · ~100 000 LY
+                </small>
+            </div>
+
+            <div class="list-card">
+                <strong>
+                    SUN
+                </strong>
+
+                <small>
+                    G-TYPE MAIN-SEQUENCE STAR
+                </small>
+            </div>
+        `;
+    }
+
+
+    if (
+        section ===
+        "news"
+    ) {
+
+        html = `
+            <h2>SPACE NEWS</h2>
+
+            <div class="list-card">
+                <strong>
+                    DEEP SPACE OBSERVATION
+                </strong>
+
+                <small>
+                    COSMOS SIMULATION FEED
+                </small>
+            </div>
+
+            <div class="list-card">
+                <strong>
+                    ORBITAL NETWORK
+                </strong>
+
+                <small>
+                    SATELLITE TRACKING SYSTEM
+                </small>
+            </div>
+
+            <div class="list-card">
+                <strong>
+                    PLANETARY SCIENCE
+                </strong>
+
+                <small>
+                    SOLAR SYSTEM MONITORING
+                </small>
+            </div>
+        `;
+    }
+
+
+    if (
+        section ===
+        "home"
+    ) {
+
+        return;
+    }
+
+
+    modalContent.innerHTML =
+        html;
+
+
+    modal.classList.add(
+        "active"
+    );
+
+
+    sidebar.classList.remove(
+        "open"
+    );
+}
+
+
+/* NAVIGATION */
+
+document
+    .querySelectorAll(
+        ".nav-item"
+    )
+    .forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    document
+                        .querySelectorAll(
+                            ".nav-item"
+                        )
+                        .forEach(
+                            item =>
+                                item.classList
+                                    .remove(
+                                        "active"
+                                    )
+                        );
+
+
+                    button.classList.add(
+                        "active"
+                    );
+
+
+                    openSection(
+                        button.dataset.section
+                    );
+                }
+            );
+        }
+    );
+
+
+/* =========================
+   STARLINK MOTION
+========================= */
+
+function updateStarlinks() {
+
+    if (!earth)
+        return;
+
+
+    starlinks.forEach(
+        satellite => {
+
+            satellite.userData.angle +=
+                .0025;
+
+
+            const angle =
+                satellite.userData.angle;
+
+            const radius =
+                satellite.userData.orbit;
+
+
+            satellite.position.set(
+
+                Math.cos(angle) *
+                radius,
+
+                Math.sin(
+                    angle *
+                    1.7
+                ) *
+                satellite.userData.inclination,
+
+                Math.sin(angle) *
+                radius
+
+            );
+
+
+            /*
+              Starlink jest
+              przedstawiony względem
+              Ziemi.
+            */
+
+            satellite.position
+                .add(
+                    earth.mesh.position
+                );
+
+
+            satellite.rotation.y +=
+                .01;
+        }
+    );
+}
+
+
+/* =========================
+   PLANET MOTION
+========================= */
+
+function updatePlanets() {
+
+    planets.forEach(
+        planet => {
+
+            const data =
+                planet.mesh.userData;
+
+
+            planet.angle +=
+                data.speed;
+
+
+            planet.mesh.position.x =
+                Math.cos(
+                    planet.angle
+                ) *
+                data.distance;
+
+
+            planet.mesh.position.z =
+                Math.sin(
+                    planet.angle
+                ) *
+                data.distance;
+
+
+            planet.mesh.rotation.y +=
+                .0025;
+        }
+    );
+}
+
+
+/* =========================
+   CAMERA
+========================= */
+
+function updateCamera() {
+
+    if (
+        selectedObject
+    ) {
+
+        const target =
+            selectedObject
+                .position;
+
+
+        const desired =
+            new THREE.Vector3(
+                target.x +
+                Math.sin(
+                    cameraAngle
+                ) *
+                cameraDistance,
+
+                target.y +
+                cameraHeight,
+
+                target.z +
+                Math.cos(
+                    cameraAngle
+                ) *
+                cameraDistance
+            );
+
+
+        camera.position.lerp(
+            desired,
+            .04
+        );
+
+
+        camera.lookAt(
+            target
+        );
+
+    } else {
+
+        const desired =
+            new THREE.Vector3(
+                Math.sin(
+                    cameraAngle
+                ) *
+                cameraDistance,
+
+                cameraHeight,
+
+                Math.cos(
+                    cameraAngle
+                ) *
+                cameraDistance
+            );
+
+
+        camera.position.lerp(
+            desired,
+            .04
+        );
+
+
+        camera.lookAt(
+            0,
+            0,
+            0
+        );
+    }
+}
+
+
+/* =========================
+   FPS
+========================= */
+
+let frames = 0;
+
+let lastFPS =
+    performance.now();
+
+
+function updateFPS() {
+
+    frames++;
+
+    const now =
+        performance.now();
+
+
+    if (
+        now -
+        lastFPS >
+        1000
+    ) {
+
+        document.getElementById(
+            "fps"
+        ).textContent =
+            frames;
+
+
+        frames = 0;
+
+        lastFPS = now;
+    }
+}
+
+
+/* =========================
+   CAMERA DATA
+========================= */
+
+function updateHUD() {
+
+    document.getElementById(
+        "cameraData"
+    ).textContent =
+        "X " +
+        Math.round(
+            camera.position.x
+        ) +
+
+        "  Y " +
+
+        Math.round(
+            camera.position.y
+        ) +
+
+        "  Z " +
+
+        Math.round(
+            camera.position.z
+        );
+}
 
 
 /* =========================
@@ -478,72 +1739,23 @@ function animate() {
     );
 
 
-    /* Planets */
+    updatePlanets();
 
-    planets.forEach(
-        planet => {
+    updateStarlinks();
 
-            planet.angle +=
-                planet.mesh.userData.speed;
+    updateCamera();
 
-            planet.mesh.position.x =
-                Math.cos(
-                    planet.angle
-                ) *
-                planet.mesh.userData.distance;
+    updateHUD();
 
-            planet.mesh.position.z =
-                Math.sin(
-                    planet.angle
-                ) *
-                planet.mesh.userData.distance;
+    updateFPS();
 
-            planet.mesh.rotation.y +=
-                0.003;
-        }
-    );
-
-
-    /* Camera rotation */
-
-    camera.position.x =
-        Math.sin(rotationY) *
-        100;
-
-    camera.position.y =
-        35 +
-        rotationX * 30;
-
-    camera.lookAt(
-        0,
-        0,
-        0
-    );
-
-
-    /* Stars */
-
-    stars.rotation.y +=
-        0.0002;
-
-
-    /* Sun */
 
     sun.rotation.y +=
-        0.002;
+        .001;
 
 
-    /* Coordinates */
-
-    document.getElementById(
-        "coordinates"
-    ).textContent =
-        "X " +
-        Math.round(camera.position.x) +
-        "  Y " +
-        Math.round(camera.position.y) +
-        "  Z " +
-        Math.round(camera.position.z);
+    stars.rotation.y +=
+        .00005;
 
 
     renderer.render(
@@ -565,11 +1777,21 @@ window.addEventListener(
             window.innerWidth /
             window.innerHeight;
 
+
         camera.updateProjectionMatrix();
+
 
         renderer.setSize(
             window.innerWidth,
             window.innerHeight
+        );
+
+
+        renderer.setPixelRatio(
+            Math.min(
+                window.devicePixelRatio,
+                1.5
+            )
         );
     }
 );
@@ -579,26 +1801,26 @@ window.addEventListener(
    START
 ========================= */
 
-animate();
+loadingStep(
+    "SPACE OPERATIONS READY...",
+    100
+);
 
 
-/* =========================
-   REMOVE LOADING SCREEN
-========================= */
-
-window.addEventListener(
-    "load",
+setTimeout(
     () => {
 
-        setTimeout(
-            () => {
-
-                document
-                    .getElementById("loading")
-                    .classList.add("hide");
-
-            },
-            700
+        loading.classList.add(
+            "hidden"
         );
-    }
+
+        app.classList.add(
+            "ready"
+        );
+
+    },
+    500
 );
+
+
+animate();
