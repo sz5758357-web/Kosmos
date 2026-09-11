@@ -1,349 +1,387 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>COSMOS LIVE — Mission Control</title>
+    <title>COSMOS — Centrum Kontroli Kosmosu</title>
 
-  <meta name="theme-color" content="#05070d">
-  <meta name="description" content="COSMOS LIVE — real-time space mission control">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="preconnect" href="https://celestrak.org">
+    <style>
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #02030a;
+        }
+    </style>
 
-  <link rel="stylesheet" href="style.css">
-
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.185.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.0/examples/jsm/"
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.185.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.0/examples/jsm/",
+            "satellite.js": "https://cdn.jsdelivr.net/npm/satellite.js@7.1.0/+esm"
+        }
     }
-  }
-  </script>
+    </script>
 </head>
 
 <body>
 
-<div id="loading">
-  <div class="loader-logo">COSMOS</div>
-  <div class="loader-line">
-    <span id="loadProgress"></span>
-  </div>
-  <div id="loadText">INITIALIZING MISSION CONTROL</div>
-</div>
+<div id="ekranStartowy">
+    <div class="logoStart">COSMOS</div>
+    <div class="podtytulStart">CENTRUM KONTROLI KOSMOSU</div>
 
-<div id="app">
-
-  <header class="topbar">
-
-    <div class="brand">
-      <div class="brand-mark">C</div>
-      <div>
-        <strong>COSMOS</strong>
-        <span>LIVE MISSION CONTROL</span>
-      </div>
+    <div class="pasekLadowania">
+        <div id="postepLadowania"></div>
     </div>
 
-    <div class="top-status">
-      <div class="live">
-        <i></i>
-        LIVE
-      </div>
+    <div id="tekstLadowania">Uruchamianie systemu...</div>
+</div>
 
-      <div class="utc">
-        <span>UTC</span>
-        <strong id="utcClock">--:--:--</strong>
-      </div>
-    </div>
+<div id="aplikacja">
 
-  </header>
+    <header class="gora">
 
-  <aside class="sidebar">
-
-    <button class="nav active" data-section="overview">
-      <span>◉</span>
-      <label>OVERVIEW</label>
-    </button>
-
-    <button class="nav" data-section="satellites">
-      <span>◈</span>
-      <label>SATELLITES</label>
-    </button>
-
-    <button class="nav" data-section="missions">
-      <span>🚀</span>
-      <label>MISSIONS</label>
-    </button>
-
-    <button class="nav" data-section="solar">
-      <span>◎</span>
-      <label>SOLAR SYSTEM</label>
-    </button>
-
-    <button class="nav" data-section="news">
-      <span>▤</span>
-      <label>SPACE NEWS</label>
-    </button>
-
-  </aside>
-
-  <main>
-
-    <section id="overview" class="section active">
-
-      <div class="scene">
-        <canvas id="space"></canvas>
-
-        <div class="scene-grid"></div>
-
-        <div class="hud hud-top-left">
-          <div class="hud-title">EARTH OBSERVATION</div>
-          <div class="hud-value">LIVE 3D TRACKING</div>
-        </div>
-
-        <div class="hud hud-top-right">
-          <div>OBJECTS</div>
-          <strong id="objectCount">--</strong>
-        </div>
-
-        <div class="scene-controls">
-          <button id="resetCamera">RESET VIEW</button>
-          <button id="focusISS">TRACK ISS</button>
-        </div>
-
-        <div class="earth-label">
-          <div class="label-dot"></div>
-          EARTH
-        </div>
-
-      </div>
-
-      <div class="dashboard">
-
-        <div class="card main-card">
-          <div class="card-head">
-            <span>MISSION CONTROL</span>
-            <b class="green">ONLINE</b>
-          </div>
-
-          <h1>SPACE<br>TELEMETRY</h1>
-
-          <p>
-            Real orbital data, satellite tracking and mission information.
-          </p>
-
-          <div class="big-time" id="bigTime">--:--:--</div>
-        </div>
-
-        <div class="card telemetry">
-
-          <div class="card-head">
-            <span>ISS TRACKING</span>
-            <b id="issStatus">LOADING</b>
-          </div>
-
-          <div class="telemetry-grid">
-
+        <div class="marka">
+            <div class="logo">C</div>
             <div>
-              <span>ALTITUDE</span>
-              <strong id="issAltitude">--</strong>
-              <small>km</small>
+                <div class="nazwa">COSMOS</div>
+                <div class="opis">CENTRUM KONTROLI KOSMOSU</div>
+            </div>
+        </div>
+
+        <div class="statusGlowny">
+            <span class="kropka"></span>
+            <span>SYSTEM ONLINE</span>
+        </div>
+
+        <div class="czas">
+            <small>UTC</small>
+            <strong id="zegar">--:--:--</strong>
+        </div>
+
+    </header>
+
+
+    <aside class="menu">
+
+        <button class="menuPrzycisk aktywny" data-strona="start">
+            <span>⌂</span>
+            <label>START</label>
+        </button>
+
+        <button class="menuPrzycisk" data-strona="satelity">
+            <span>◉</span>
+            <label>SATELITY</label>
+        </button>
+
+        <button class="menuPrzycisk" data-strona="misje">
+            <span>🚀</span>
+            <label>MISJE</label>
+        </button>
+
+        <button class="menuPrzycisk" data-strona="planety">
+            <span>◌</span>
+            <label>PLANETY</label>
+        </button>
+
+        <button class="menuPrzycisk" data-strona="aktualnosci">
+            <span>▤</span>
+            <label>AKTUALNOŚCI</label>
+        </button>
+
+        <button class="menuPrzycisk" data-strona="system">
+            <span>⚙</span>
+            <label>SYSTEM</label>
+        </button>
+
+    </aside>
+
+
+    <main id="glowny">
+
+        <section id="stronaStart" class="strona aktywna">
+
+            <div id="scena3D"></div>
+
+            <div class="nakladkaGora">
+                <div>
+                    <div class="etykieta">CENTRUM OPERACYJNE</div>
+                    <h1>OBSERWATORIUM<br><span>KOSMOSU</span></h1>
+                    <p>Monitorowanie obiektów orbitalnych i misji kosmicznych.</p>
+                </div>
+
+                <div class="pudelkoLive">
+                    <span></span>
+                    DANE NA ŻYWO
+                </div>
             </div>
 
-            <div>
-              <span>SPEED</span>
-              <strong id="issSpeed">--</strong>
-              <small>km/s</small>
+
+            <div class="telemetria">
+
+                <div class="telemetryBox">
+                    <small>OBIEKT</small>
+                    <strong id="obiektTelemetryczny">ZIEMIA</strong>
+                </div>
+
+                <div class="telemetryBox">
+                    <small>SATELITY</small>
+                    <strong id="liczbaSatelitow">ŁADOWANIE</strong>
+                </div>
+
+                <div class="telemetryBox">
+                    <small>ISS</small>
+                    <strong id="issStatus">ŁADOWANIE</strong>
+                </div>
+
+                <div class="telemetryBox">
+                    <small>ŹRÓDŁO</small>
+                    <strong>CELESTRAK</strong>
+                </div>
+
             </div>
 
-            <div>
-              <span>LATITUDE</span>
-              <strong id="issLat">--</strong>
-              <small>°</small>
+
+            <div class="panelISS">
+
+                <div class="panelNaglowek">
+                    <div>
+                        <span class="zielonaKropka"></span>
+                        MIĘDZYNARODOWA STACJA KOSMICZNA
+                    </div>
+
+                    <span id="issOdnowienie">AKTUALIZOWANIE</span>
+                </div>
+
+                <div class="issGlowna">
+                    <div class="issWartosc">
+                        <small>WYSOKOŚĆ</small>
+                        <strong id="issWysokosc">--</strong>
+                        <span>km</span>
+                    </div>
+
+                    <div class="issWartosc">
+                        <small>PRĘDKOŚĆ</small>
+                        <strong id="issPredkosc">--</strong>
+                        <span>km/s</span>
+                    </div>
+
+                    <div class="issWartosc">
+                        <small>SZEROKOŚĆ</small>
+                        <strong id="issLat">--</strong>
+                        <span>°</span>
+                    </div>
+
+                    <div class="issWartosc">
+                        <small>DŁUGOŚĆ</small>
+                        <strong id="issLon">--</strong>
+                        <span>°</span>
+                    </div>
+                </div>
+
             </div>
 
-            <div>
-              <span>LONGITUDE</span>
-              <strong id="issLon">--</strong>
-              <small>°</small>
+
+            <div class="instrukcja">
+                <span>PRZESUŃ</span>
+                obracanie widoku
+                <span>ROLKA</span>
+                przybliżenie
+                <span>KLIK</span>
+                wybór obiektu
             </div>
 
-          </div>
-
-          <div class="data-age">
-            DATA AGE:
-            <strong id="dataAge">--</strong>
-          </div>
-
-        </div>
-
-        <div class="card systems">
-
-          <div class="card-head">
-            <span>SYSTEM STATUS</span>
-          </div>
-
-          <div class="system">
-            <span>THREE.JS ENGINE</span>
-            <b class="green">ONLINE</b>
-          </div>
-
-          <div class="system">
-            <span>ORBIT DATA</span>
-            <b id="orbitStatus">CONNECTING</b>
-          </div>
-
-          <div class="system">
-            <span>ISS</span>
-            <b id="systemISS">CONNECTING</b>
-          </div>
-
-          <div class="system">
-            <span>STARLINK</span>
-            <b id="systemStarlink">CONNECTING</b>
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
+        </section>
 
 
-    <section id="satellites" class="section page">
+        <section id="stronaSatelity" class="strona">
 
-      <div class="page-head">
-        <div>
-          <span class="eyebrow">ORBITAL NETWORK</span>
-          <h2>Satellites</h2>
-        </div>
+            <div class="stronaNaglowek">
+                <div>
+                    <div class="etykieta">ORBITA ZIEMSKA</div>
+                    <h2>SATELITY</h2>
+                    <p>Obiekty pobrane z aktualnych danych orbitalnych.</p>
+                </div>
 
-        <div class="search">
-          <input id="satelliteSearch" placeholder="Search satellite...">
-        </div>
-      </div>
-
-      <div class="sat-layout">
-
-        <div class="sat-list" id="satelliteList">
-          <div class="empty">Loading orbital objects...</div>
-        </div>
-
-        <div class="sat-info card">
-
-          <div class="card-head">
-            <span>SELECTED OBJECT</span>
-            <b id="selectedType">—</b>
-          </div>
-
-          <h3 id="selectedName">No object selected</h3>
-
-          <div class="info-row">
-            <span>NORAD ID</span>
-            <strong id="selectedNorad">—</strong>
-          </div>
-
-          <div class="info-row">
-            <span>LATITUDE</span>
-            <strong id="selectedLat">—</strong>
-          </div>
-
-          <div class="info-row">
-            <span>LONGITUDE</span>
-            <strong id="selectedLon">—</strong>
-          </div>
-
-          <div class="info-row">
-            <span>ALTITUDE</span>
-            <strong id="selectedAlt">—</strong>
-          </div>
-
-          <div class="info-row">
-            <span>SPEED</span>
-            <strong id="selectedSpeed">—</strong>
-          </div>
-
-          <button id="trackSelected" class="primary">
-            TRACK OBJECT
-          </button>
-
-        </div>
-
-      </div>
-
-    </section>
+                <div class="wyszukiwarka">
+                    <input id="szukajSatelity" placeholder="Szukaj satelity...">
+                    <span>⌕</span>
+                </div>
+            </div>
 
 
-    <section id="missions" class="section page">
+            <div class="statystykiSatelitow">
 
-      <div class="page-head">
-        <div>
-          <span class="eyebrow">LAUNCH OPERATIONS</span>
-          <h2>Upcoming Missions</h2>
-        </div>
-      </div>
+                <div class="kartaStat">
+                    <small>ZAŁADOWANE OBIEKTY</small>
+                    <strong id="satelityRazem">--</strong>
+                </div>
 
-      <div id="missionList" class="mission-list">
-        <div class="empty">Loading missions...</div>
-      </div>
+                <div class="kartaStat">
+                    <small>STARLINK</small>
+                    <strong id="starlinkRazem">--</strong>
+                </div>
 
-    </section>
+                <div class="kartaStat">
+                    <small>ISS</small>
+                    <strong>25544</strong>
+                </div>
 
+                <div class="kartaStat">
+                    <small>AKTUALIZACJA</small>
+                    <strong id="czasSatelity">--</strong>
+                </div>
 
-    <section id="solar" class="section page">
-
-      <div class="page-head">
-        <div>
-          <span class="eyebrow">ASTRONOMICAL SYSTEM</span>
-          <h2>Solar System</h2>
-        </div>
-      </div>
-
-      <div class="planet-grid" id="planetGrid"></div>
-
-    </section>
+            </div>
 
 
-    <section id="news" class="section page">
+            <div class="satelityLayout">
 
-      <div class="page-head">
-        <div>
-          <span class="eyebrow">SPACE INTELLIGENCE</span>
-          <h2>Space News</h2>
-        </div>
-      </div>
+                <div class="listaSatelitow" id="listaSatelitow">
+                    <div class="ladowanieLista">Pobieranie danych orbitalnych...</div>
+                </div>
 
-      <div class="news-grid" id="newsGrid">
+                <div class="szczegolySatelity" id="szczegolySatelity">
 
-        <article class="news-card">
-          <span>NASA</span>
-          <h3>Live space information</h3>
-          <p>
-            This section is ready for live space news sources.
-          </p>
-        </article>
+                    <div class="pustyStan">
+                        <div class="duzaIkona">◉</div>
+                        <h3>Wybierz satelitę</h3>
+                        <p>Kliknij obiekt na liście, aby zobaczyć jego dane orbitalne.</p>
+                    </div>
 
-        <article class="news-card">
-          <span>COSMOS</span>
-          <h3>Mission Control Online</h3>
-          <p>
-            Orbital tracking systems are active.
-          </p>
-        </article>
+                </div>
 
-      </div>
+            </div>
 
-    </section>
+        </section>
 
-  </main>
 
-  <div id="toast"></div>
+        <section id="stronaMisje" class="strona">
+
+            <div class="stronaNaglowek">
+                <div>
+                    <div class="etykieta">AKTUALNE DANE</div>
+                    <h2>MISJE KOSMICZNE</h2>
+                    <p>Nadchodzące i ostatnio zaplanowane starty.</p>
+                </div>
+
+                <div class="pudelkoLive">
+                    <span></span>
+                    NA ŻYWO
+                </div>
+            </div>
+
+            <div id="listaMisji" class="listaMisji">
+                <div class="ladowanieLista">Pobieranie misji...</div>
+            </div>
+
+        </section>
+
+
+        <section id="stronaPlanety" class="strona">
+
+            <div class="stronaNaglowek">
+                <div>
+                    <div class="etykieta">UKŁAD SŁONECZNY</div>
+                    <h2>PLANETY</h2>
+                    <p>Interaktywna wizualizacja Układu Słonecznego.</p>
+                </div>
+            </div>
+
+            <div class="planetyGrid" id="planetyGrid"></div>
+
+        </section>
+
+
+        <section id="stronaAktualnosci" class="strona">
+
+            <div class="stronaNaglowek">
+                <div>
+                    <div class="etykieta">KOSMOS DZISIAJ</div>
+                    <h2>AKTUALNOŚCI</h2>
+                    <p>Najnowsze informacje z NASA.</p>
+                </div>
+            </div>
+
+            <div class="aktualnoscGlowna" id="aktualnoscGlowna">
+                <div class="ladowanieLista">Pobieranie NASA APOD...</div>
+            </div>
+
+        </section>
+
+
+        <section id="stronaSystem" class="strona">
+
+            <div class="stronaNaglowek">
+                <div>
+                    <div class="etykieta">DIAGNOSTYKA</div>
+                    <h2>SYSTEM</h2>
+                    <p>Stan połączenia i źródeł danych.</p>
+                </div>
+            </div>
+
+            <div class="systemGrid">
+
+                <div class="systemKarta">
+                    <span class="systemIkona">◉</span>
+                    <div>
+                        <small>TRZYJS</small>
+                        <strong id="statusThree">AKTYWNY</strong>
+                    </div>
+                </div>
+
+                <div class="systemKarta">
+                    <span class="systemIkona">◎</span>
+                    <div>
+                        <small>DANE ORBITALNE</small>
+                        <strong id="statusCelestrak">SPRAWDZANIE</strong>
+                    </div>
+                </div>
+
+                <div class="systemKarta">
+                    <span class="systemIkona">🚀</span>
+                    <div>
+                        <small>BAZA MISJI</small>
+                        <strong id="statusMisji">SPRAWDZANIE</strong>
+                    </div>
+                </div>
+
+                <div class="systemKarta">
+                    <span class="systemIkona">N</span>
+                    <div>
+                        <small>NASA APOD</small>
+                        <strong id="statusNASA">SPRAWDZANIE</strong>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="informacjaSystemowa">
+                <h3>INFORMACJA O DANYCH</h3>
+                <p>
+                    Pozycje satelitów są obliczane na podstawie aktualnych elementów orbitalnych
+                    i modelu SGP4. Dane źródłowe mogą mieć określony czas aktualizacji.
+                </p>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <div id="powiadomienie"></div>
 
 </div>
 
-<script type="module" src="script.js"></script>
+
+<script type="module" src="./script.js"></script>
 
 </body>
 </html>
